@@ -1,0 +1,239 @@
+/// ...........................Global Settings. .......................
+@font-face {
+  font-family: pixelar;
+  src: url("./Static/fonts/pixelar_font.woff2");
+}
+* {
+  box-sizing: border-box;
+  font-family: pixelar;
+  cursor: url("./Static/img/global_cursor.png"), auto !important;
+}
+
+:root {
+  --dark-hidden: flex;
+  --light-hidden: none;
+  --col-pink-300: #fa34f3;
+  --col-pink-400: #cf15f9;
+  --col-pink-500: #ac15f9;
+  --col-default-pink: #fa34f3;
+  --theme-body-bg: var(--col-pink-300);
+  --landing-footer-bg: var(--col-pink-300);
+  --theme-balance-gradient-2: var(--col-pink-300);
+  --theme-scroll-touch: var(--col-pink-300);
+  --theme-dark-pink: var(--col-pink-400);
+  --col-cyan-50: #5f9495;
+  --col-cyan-100: #219497;
+  --col-cyan-200: #04b7bc;
+  --col-cyan-300: #98fcff;
+  --col-cyan-400: #81cdcf;
+  --col-cyan-500: #37f4f1;
+  --col-cyan-600: #0ff;
+  --equip-item: var(--col-cyan-100);
+  --theme-cyan: var(--col-cyan-200);
+  --theme-game-bg: var(--col-cyan-200);
+  --theme-item-bg: var(--col-cyan-400);
+  --theme-light-cyan: var(--col-cyan-50);
+  --theme-learn-1: var(--col-cyan-300);
+  --col-blue-400: #6db5f7;
+  --col-blue-500: #5891f3;
+  --col-blue-600: #7f96fa;
+  --theme-learn-2: var(--col-blue-400);
+  --theme-learn-3: var(--col-blue-500);
+  --theme-learn-4: var(--col-blue-600);
+  --col-yellow-100: #fffa65;
+  --col-yellow-200: #e5df40;
+  --theme-yellow: var(--col-yellow-100);
+  --theme-game-border: var(--col-yellow-100);
+  --theme-page-title-border: var(--col-yellow-200);
+  --theme-header-border: var(--col-yellow-200);
+  --col-purple-200: #b995fc;
+  --col-purple-250: #b174fa;
+  --col-purple-260: #8f17f9;
+  --col-purple-270: #7e18f8;
+  --col-purple-280: #730cee;
+  --col-purple-300: #7217f4;
+  --col-purple-320: #7217f4;
+  --col-purple-350: #7100eb;
+  --col-purple-400: #722cf0;
+  --col-purple-450: #6d18f8;
+  --col-purple-500: #5100b1;
+  --col-purple-600: #4c1f7d;
+  --col-purple-700: rgba(76, 31, 125, 0.9);
+  --col-text-purple: var(--col-purple-300);
+  --link-hover-purple: var(--col-purple-200);
+  --theme-button-purple: var(--col-purple-300);
+  --theme-balance-gradient-1: var(--col-purple-400);
+  --theme-scroll-bg: var(--col-purple-400);
+  --theme-landing-purple: var(--col-purple-500);
+  --theme-side-menu: var(--col-purple-600);
+  --theme-logo-border: var(--col-purple-600);
+  --bridge-bg: var(--col-purple-700);
+  --logo-bg: var(--col-purple-300);
+  --col-black: #1e1e1e;
+  --col-white: #fff;
+  --col-dark-white: #f8ffff;
+  --col-light-grey: #eee;
+  --col-dark-grey: #1e1e1e;
+  --col-text: var(--col-black);
+  --bg-color: var(--col-white);
+  --col-grey: var(--col-light-grey);
+  --bg-color-gray: #f1f1f1;
+  --baazaar-item-bg: var(--col-white);
+  --theme-input-bg: var(--col-white);
+  --info-bubble-bg: var(--col-white);
+  --theme-page-link: var(--col-black);
+  --side-menu-divider: var(--col-black);
+  --dull-border: var(--col-black);
+  --input-inner-shadow: var(--col-purple-600);
+  --theme-toggle-tint: var(--col-cyan-100);
+  --theme-side-menu-button: var(--col-purple-300);
+  --col-side-menu-highlight: var(--col-pink-300);
+  --portal-page-bg: var(--col-purple-600);
+  --portal-page-border: var(--col-black);
+  --inventory-select-item: var(--col-cyan-600);
+  --inventory-accent-text: var(--col-cyan-100);
+  --pocket-item-bg-1: var(--col-cyan-300);
+  --pocket-item-bg-2: var(--col-cyan-300);
+  --pocket-item-disabled-1: var(--col-cyan-300);
+  --pocket-item-disabled-2: var(--col-cyan-400);
+  --pocket-item-select: var(--col-cyan-500);
+  --theme-power-bg: var(--col-cyan-400);
+  --swap-text-col: #000;
+  --swap-accent-col: #fff;
+  --col-secondary-100: #bef3f5;
+  --col-success-100: #b3f3b5;
+  --col-warning-100: #f3f5be;
+  --col-error-100: #f5c0be;
+  --col-grey-100: #faf7fe;
+  --col-grey-800: #100221;
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--theme-scroll-touch);
+  border-radius: 20px;
+  border: 3px solid var(--theme-scroll-bg);
+}
+*::-webkit-scrollbar-track {
+  background: var(--theme-scroll-bg);
+}
+html {
+  font-size: 10px;
+}
+body {
+  color: var(--col-text)!important;
+
+  background: var(--theme-body-bg) !important;
+  background-attachment: fixed !important;
+  background-image: url("./Static/img/ghostbg.svg"), none !important;
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 300px;
+  margin: 0;
+  min-height: 100%;
+  min-width: 100%;
+  object-fit: cover;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overflow: visible;
+  padding: 0;
+  width: 100%;
+  font-size: 16px!important;
+}
+
+/// ...........................Global Settings. .......................End
+// ................ custom breakpoints................
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media screen and (max-width: 991px) {
+  .container {
+    max-width: 991px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+@media screen and (min-width: 1200px) {
+  .container {
+    max-width: 1240px;
+  }
+}
+// ................ custom breakpoints................End
+
+// ....................Link, button styles..................
+a,
+button,
+.active_cursor {
+  cursor: url("./Static/img/link_cursor.png") 14 0, pointer !important;
+}
+a {
+  text-decoration: none !important;
+}
+// ....................Link, button styles..................End
+
+// .................Heading...............
+h3 {
+  font-size: 3rem;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,p {
+  color: var(--col-text) !important;
+}
+// .................Heading...............End
+.text_purple {
+  color: var(--col-text-purple);
+}
+
+// ............btn
+
+.btn_purple_with_border {
+  background-color: var(--theme-button-purple);
+  color: white;
+  border: 3px solid #000;
+  font-size: 16px;
+}
+.border_all_box{
+  border: 3px solid #000;
+  font-size: 20px;
+}
+::placeholder{
+ font-size: 20px;
+}
+
+
+////////////////..................................black theme...............
+[data-theme="dark-theme"] {
+  body {
+    background-blend-mode: overlay;
+    background: #080315 !important;
+  }
+  * {
+    --theme-side-menu: #12032e;
+    --theme-side-menu-button: #200449;
+    --col-pink-300: #7217f4 !important;
+    --baazaar-item-bg: #12032e !important;
+    --col-text: #fff !important;
+    --theme-game-border: #47238d !important;
+    --theme-yellow: #47238d;
+    --theme-game-bg: #12032e!important;
+  }
+  .form-control{
+    background: #000;
+    color: white;
+  }
+}
+////////////////..................................black theme...............End

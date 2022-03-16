@@ -1,0 +1,47 @@
+#MyGotChis {
+  border: solid 15px var(--theme-yellow) !important;
+  background: var(--theme-yellow) ;
+  margin-bottom: 5rem;
+  .content_header {
+    background: var(--theme-game-bg);
+    padding: 3px 10px;
+    .balance {
+      font-size: 24px;
+    }
+
+  }
+  .content_dropdown {
+    .dropdown-toggle {
+      font-size: 18px;
+      background-color: var(--theme-button-purple);
+      color: white;
+      border: 2px solid #1e1e1e;
+      min-width: 116px;
+    }
+    .dropdown-toggle:after {
+      display: none;
+    }
+    .dropdown-menu {
+      font-size: 16px;
+      background: #1e1e1e;
+      text-align: center;
+      color: white;
+      margin-top: -5px !important;
+      border-radius: 0px;
+      width: 100%;
+    }
+  }
+  .content_body{
+      min-height: 82vh;
+      background: var(--theme-game-bg);
+      // text-align: center;
+      font-size: 16px;
+      color: #000;
+      .btn_visit{
+          background: #007bff;
+          color: white;
+          border: 3px solid black;
+          font-size: 16px;
+      }
+  }
+}

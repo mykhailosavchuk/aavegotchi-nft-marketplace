@@ -1,0 +1,115 @@
+#MyGotChis {
+  /* border: solid 15px var(--theme-yellow) !important; */
+  background: var(--theme-yellow);
+  margin-bottom: 5rem;
+}
+
+#MyGotChis .content_header {
+  background: var(--theme-game-bg);
+  padding: 3px 10px;
+}
+
+#MyGotChis .content_header .balance {
+  font-size: 24px;
+}
+
+#MyGotChis .content_dropdown .dropdown-toggle {
+  font-size: 18px;
+  background-color: var(--theme-button-purple);
+  color: white;
+  border: 2px solid #1e1e1e;
+  min-width: 116px;
+}
+
+#MyGotChis .content_dropdown .dropdown-toggle:after {
+  display: none;
+}
+
+#MyGotChis .content_dropdown .dropdown-menu {
+  font-size: 16px;
+  background: #1e1e1e;
+  text-align: center;
+  color: white;
+  margin-top: -5px !important;
+  border-radius: 0px;
+  width: 100%;
+}
+
+#MyGotChis .content_body {
+  min-height: 82vh;
+  background: var(--theme-game-bg);
+  /* text-align: center; */
+  font-size: 16px;
+  color: #000;
+}
+
+#MyGotChis .content_body .btn_visit {
+  background: #007bff;
+  color: white;
+  border: 3px solid black;
+  font-size: 16px;
+}
+
+.tabItemContent {
+  background: var(--baazaar-item-bg);
+}
+
+/* .tabItemContent .tabItemList {
+  border-left: 7px solid black;
+  border-right: 7px solid black;
+} */
+
+.tabItemContent .tabItemList > li {
+  border: solid 7px black;
+  margin: 5px;
+  padding: 1rem 3rem !important;
+}
+
+@media (max-width: 768px) {
+   .tabItemContent .tabItemList > li {
+    padding: 1rem 2rem !important;
+  }
+}
+
+.tabItemContent .col_header {
+  font-size: 3.6rem;
+  border-bottom: solid 2px var(--col-text);
+}
+
+@media (max-width: 767px) {
+   .tabItemContent .col_header {
+    font-size: 24px;
+  }
+}
+
+.tabItemContent .col_header h3 {
+  font-weight: bold;
+  font-size: 3.6rem;
+}
+
+@media (max-width: 767px) {
+   .tabItemContent .col_header h3 {
+    font-size: 24px;
+  }
+}
+
+ .tabItemContent .tabContentLink {
+  color: var(--col-text) !important;
+}
+
+ .tabItemContent .tabContentLink:hover .col_header h3 {
+  color: var(--col-text-purple) !important;
+}
+
+ .tabItemContent .col_body {
+  font-size: 2.4rem;
+}
+
+.tabItemContent .col_body li{
+  text-align: left;
+}
+
+ .tabItemContent .col_body a {
+  color: var(--col-text-purple);
+}
+/*# sourceMappingURL=MyGotChis.css.map */

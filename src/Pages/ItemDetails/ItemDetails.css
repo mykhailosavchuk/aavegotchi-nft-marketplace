@@ -1,0 +1,91 @@
+#PortalItems .content_wrapper {
+  border: 7px solid black;
+  padding: 1rem 3rem !important;
+}
+
+@media (max-width: 768px) {
+  #PortalItems .content_wrapper {
+    padding: 1rem 1.8rem !important;
+  }
+}
+
+#PortalItems .col_header {
+  font-size: 3.6rem;
+  border-bottom: solid 2px var(--col-text);
+}
+
+@media (max-width: 768px) {
+  #PortalItems .col_header {
+    font-size: 20px;
+  }
+}
+
+#PortalItems .col_header h3 {
+  font-weight: bold;
+  font-size: 3.6rem;
+}
+
+@media (max-width: 768px) {
+  #PortalItems .col_header h3 {
+    font-size: 20px;
+  }
+}
+
+#PortalItems .col_header .back_btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fa34f3;
+}
+
+#PortalItems .col_body {
+  margin-top: 15px;
+}
+
+#PortalItems .col_body .left_side_img_box {
+  width: 100%;
+  height: 250px;
+  /* background: #000; */
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+
+#PortalItems .col_body .left_side_img_box img {
+  max-height: 60%;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+
+#PortalItems .col_body .nes-btn {
+  width: 100%;
+  max-height: 50px;
+  font-size: 24px;
+  background: rgba(0, 0, 0, 0.3) !important;
+  color: #fff;
+  margin-top: 2rem;
+  -webkit-box-shadow: inset -4px -4px rgba(0, 0, 0, 0.2) !important;
+          box-shadow: inset -4px -4px rgba(0, 0, 0, 0.2) !important;
+}
+
+#PortalItems .col_body .user_details_col {
+  font-size: 3.2rem;
+  line-height: 40px;
+}
+
+#PortalItems .col_body .user_details_col h2 {
+  font-size: 4.8rem;
+}
+
+@media (max-width: 768px) {
+  #PortalItems .col_body .user_details_col h2 {
+    font-size: 32px;
+  }
+}
+/*# sourceMappingURL=PortalItems.css.map */

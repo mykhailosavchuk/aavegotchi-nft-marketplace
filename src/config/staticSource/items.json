@@ -1,0 +1,74 @@
+[
+    {
+        "id":1,
+        "price": "1",
+        "owner": "Murray",
+        "type": "amulet",
+        "name": "Glaring Panther Pendant",
+        "tier": "Rare",
+        "sprite": "glaring-panther-pendant",
+        "spriteIMG": "/img/auction_1.jpg",
+        "perks": { "critChance": 0.034, "skillCoolDown": 0.003 },
+        "quality": "24.564"
+    },
+    {
+        "id":1,
+        "price": "1",
+        "owner": "Murray",
+        "type": "amulet",
+        "name": "Glaring Panther Pendant",
+        "tier": "Rare",
+        "sprite": "glaring-panther-pendant",
+        "spriteIMG": "/img/auction_1.jpg",
+        "perks": { "critChance": 0.034, "skillCoolDown": 0.003 },
+        "quality": "24.564"
+    },
+    {
+        "id":1,
+        "price": "1",
+        "owner": "Murray",
+        "type": "amulet",
+        "name": "Glaring Panther Pendant",
+        "tier": "Rare",
+        "sprite": "glaring-panther-pendant",
+        "spriteIMG": "/img/auction_1.jpg",
+        "perks": { "critChance": 0.034, "skillCoolDown": 0.003 },
+        "quality": "24.564"
+    },
+    {
+        "id":1,
+        "price": "1",
+        "owner": "Murray",
+        "type": "amulet",
+        "name": "Glaring Panther Pendant",
+        "tier": "Rare",
+        "sprite": "glaring-panther-pendant",
+        "spriteIMG": "/img/auction_1.jpg",
+        "perks": { "critChance": 0.034, "skillCoolDown": 0.003 },
+        "quality": "24.564"
+    },
+    {
+        "id":1,
+        "price": "1",
+        "owner": "Murray",
+        "type": "amulet",
+        "name": "Glaring Panther Pendant",
+        "tier": "Rare",
+        "sprite": "glaring-panther-pendant",
+        "spriteIMG": "/img/auction_1.jpg",
+        "perks": { "critChance": 0.034, "skillCoolDown": 0.003 },
+        "quality": "24.564"
+    },
+    {
+        "id":1,
+        "price": "1",
+        "owner": "Murray",
+        "type": "amulet",
+        "name": "Glaring Panther Pendant",
+        "tier": "Rare",
+        "sprite": "glaring-panther-pendant",
+        "spriteIMG": "/img/auction_1.jpg",
+        "perks": { "critChance": 0.034, "skillCoolDown": 0.003 },
+        "quality": "24.564"
+    }
+]

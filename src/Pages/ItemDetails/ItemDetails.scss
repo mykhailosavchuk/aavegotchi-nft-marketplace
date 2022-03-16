@@ -1,0 +1,63 @@
+#PortalItems {
+  .content_wrapper {
+    border: 7px solid black;
+    padding: 1rem 3rem !important;
+    @media (max-width: 768px) {
+      padding: 1rem 1.8rem !important;
+    }
+  }
+  .col_header {
+    font-size: 3.6rem;
+    border-bottom: solid 2px var(--col-text);
+    @media (max-width: 768px) {
+      font-size: 20px;
+    }
+    h3 {
+      font-weight: bold;
+      font-size: 3.6rem;
+      @media (max-width: 768px) {
+        font-size: 20px;
+      }
+    }
+    .back_btn {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fa34f3;
+    }
+  }
+  .col_body {
+    margin-top: 15px;
+    .left_side_img_box {
+      width: 100%;
+      height: 250px;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      img {
+        max-height: 60%;
+        object-fit: contain;
+      }
+    }
+    .nes-btn {
+      width: 100%;
+      max-height: 50px;
+      font-size: 24px;
+      background: rgba(0, 0, 0, 0.3) !important;
+      color: #fff;
+      margin-top: 2rem;
+      box-shadow: inset -4px -4px rgba(0, 0, 0, 0.2) !important;
+    }
+    .user_details_col {
+      font-size: 3.2rem;
+      line-height: 40px;
+      h2 {
+        font-size: 4.8rem;
+        @media (max-width: 768px) {
+          font-size: 32px;
+        }
+      }
+    }
+  }
+}
