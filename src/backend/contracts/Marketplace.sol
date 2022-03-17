@@ -2425,6 +2425,7 @@ interface IPack is IERC721 {
   
   // mint a new crypto boy
   function mint(string memory tokenURI_, string[] memory itemUris_, string[] memory itemTypes_) external;
+  function mintBatch(string[] memory tokenURIs_, string[] memory itemUris_, string[] memory itemTypes_) external;
 
   function getIdsByPack(uint256 id_) external view returns(uint256[] memory);
 
@@ -2447,7 +2448,7 @@ contract Pack is ERC721, IPack, Ownable {
   IGotchi public gotchi;
   IERC20 public ghero;
 
-  uint256 public packPrice;
+  uint256 public itemPrice;
 
   mapping(uint256 => EnumerableSet.UintSet) private _tokenIdsByPack;
 
@@ -2459,6 +2460,7 @@ contract Pack is ERC721, IPack, Ownable {
     gotchi = IGotchi(gotchi_);
     ghero = IERC20(ghero_);
     _setBaseURI("https://ipfs.infura.io/ipfs/");
+    itemPrice = 10 ** 6;
   }
 
   // mint a new pack
@@ -2467,7 +2469,7 @@ contract Pack is ERC721, IPack, Ownable {
     require(msg.sender != address(0));
     // increment counter
   
-    ghero.transferFrom(msg.sender, address(this), packPrice);
+    ghero.transferFrom(msg.sender, address(this), itemPrice * itemUris_.length);
   
     uint256 tokenId = _packIds.current();
     // mint the token
@@ -2482,6 +2484,30 @@ contract Pack is ERC721, IPack, Ownable {
         _tokenIdsByPack[tokenId].add(gotchiId - 1);
     }
     _packIds.increment();
+  }
+
+  function mintBatch(string[] memory tokenURIs_, string[] memory itemUris_, string[] memory itemTypes_) external override {
+    // check if thic fucntion caller is not an zero address account
+    require(msg.sender != address(0));
+
+    for(uint pId=0 ; pId<tokenURIs_.length ; pId++){
+        ghero.transferFrom(msg.sender, address(this), itemPrice * 5);
+    
+        uint256 tokenId = _packIds.current();
+        // mint the token
+        _mint(msg.sender, tokenId);
+
+        // set token URI (bind token id with the passed in token URI)
+        _setTokenURI(tokenId, tokenURIs_[pId]);
+
+        for(uint i=0 ; i<5 ; i++) {
+            gotchi.mint(address(this), itemUris_[pId*5 + i], itemTypes_[pId*5 + i]);
+            uint256 gotchiId = gotchi.newId();
+            _tokenIdsByPack[tokenId].add(gotchiId - 1);
+        }
+        _packIds.increment();
+
+    }
   }
 
   function openPack(uint256 packId_) external {
@@ -2505,8 +2531,8 @@ contract Pack is ERC721, IPack, Ownable {
     _burn(id_);
   }
 
-  function setPackPrice(uint256 packPrice_) external onlyOwner {
-    packPrice = packPrice_;
+  function setItemPrice(uint256 itemPrice_) external onlyOwner {
+    itemPrice = itemPrice_;
   }
 
   function getIdsByPack(uint256 id_) public view override returns(uint256[] memory) {

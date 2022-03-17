@@ -26,8 +26,13 @@ function MyGotChis() {
   const [ filterRBy, setFilterRBy ] = useState();
   const [ assetsState, setAssetsState  ] = useState(0);
 
-  useEffect(async () => {
+  useEffect(() => {
 
+    loadData();
+    
+  }, [gotchiContract, chainId, account]);
+
+  const loadData = async () => {
     if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
       const uris = await gotchiContract.methods.holderTokenUris(account).call();
       const ids = await gotchiContract.methods.holderTokenIds(account).call();
@@ -49,8 +54,7 @@ function MyGotChis() {
       setGotchis(_gotchis);
       setCrntType(_types[0]);
     }
-    
-  }, [gotchiContract, chainId, account]);
+  }
 
   const AssetsComponent = () => {
     switch (assetsState) {
@@ -81,10 +85,6 @@ function MyGotChis() {
                           alt="img"
                         />
 
-                        {/* <LazyLoadImage
-                            alt={v.sprite}
-                            // effect="blur"
-                            src={`${hostingLink}${v.spriteIMG}`} /> */}
                       </div>
 
                       <div className="col-xl-9 col-lg-8 col-md-8 col-sm-8 col-12">
