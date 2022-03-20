@@ -5,12 +5,12 @@ import { useMoralis, useTokenPrice, useChain } from "react-moralis"
 import { shapeAddress } from "../../utils/formatHelpers";
 import Web3 from "web3";
 import { useDispatch } from "react-redux"
-import { setWeb3Action, setMarketContractAction, setTokenContractAction, setPackContractAction, setGotchiContractAction } from "../../store/actions/WalletActions"
+import { setWeb3Action, setMarketContractAction, setTokenContractAction, setPackContractAction, setGotchiContractAction, setGhstContractAction } from "../../store/actions/WalletActions"
 import Market from "../../backend/abis/Marketplace.json";
 import ERC20 from "../../backend/abis/GHERO.json"
 import Gotchi from "../../backend/abis/Gotchi.json";
 import Pack from "../../backend/abis/Pack.json";
-import { tokenAddress, marketPlaceAddress, testTokenAddress, packAddress, gotchiAddress, chain as defaultChainId } from "../../config/constances"
+import { tokenAddress, marketPlaceAddress, testTokenAddress, packAddress, gotchiAddress, chain as defaultChainId, testGhstAddress } from "../../config/constances"
 import Metamask from "../../Static/img/icon_img/metamask.png";
 import WalletConnect from "../../Static/img/icon_img/walletconnect.png";
 import TrustWallet from "../../Static/img/icon_img/TrustWallet.png";
@@ -112,12 +112,8 @@ function Navigation(props) {
   const dispatch = useDispatch();
   const { isAuthenticated, account, authenticate, logout, enableWeb3, isWeb3Enabled, isWeb3EnableLoading, web3 } = useMoralis();
   const { chainId, switchNetwork } = useChain();
-  const { data: formattedData } = useTokenPrice({chain: "polygon", address: tokenAddress})
-  const [isUSDMode, setIsUSDMode] = useState(true);
 
   const [ copyAddressLabel, setCopyAddressLabel ] = useState("Copy Address");
-
-  const toggleDisplayStyle = () => setIsUSDMode(!isUSDMode);
 
   useEffect(() => {
     let theme = thumbToggle ? "dark-theme" : "";
@@ -137,6 +133,8 @@ function Navigation(props) {
 
       const _tokenContract = new _web3.eth.Contract(ERC20.abi, testTokenAddress);
 
+      const _ghstContract = new _web3.eth.Contract(ERC20.abi, testGhstAddress);
+
       const _packContract = new _web3.eth.Contract(Pack.abi, packAddress);
 
       const _gotchiContract = new _web3.eth.Contract(Gotchi.abi, gotchiAddress);
@@ -149,13 +147,17 @@ function Navigation(props) {
 
       dispatch(setTokenContractAction(_tokenContract));
 
+      dispatch(setGhstContractAction(_ghstContract));
+
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isWeb3Enabled]);
 
   useEffect(() => {
     if(chainId && chainId !== defaultChainId) {
       dispatch(toastAction("info", "Please switch current network into Polygon.", 6000))
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chainId])
 
 

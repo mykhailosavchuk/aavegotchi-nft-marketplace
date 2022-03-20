@@ -26,10 +26,13 @@ function PortalItems(props) {
   const [ isApproved, setIsApproved  ] = useState(false);
   const { account } = useMoralis();
   const navigate = useNavigate();
+  const [ approvedAmount, setApprovedAmount ] = useState(0);
 
   useEffect(async () => {
     if(typeof tokenContract !== "undefined" && tokenContract !== null) {
       const amount = await tokenContract.methods.allowance(account, marketPlaceAddress).call();
+
+      setApprovedAmount(amount);
 
       if(Number.parseInt(amount) > item?.price) {
         setIsApproved(true)
@@ -52,8 +55,13 @@ function PortalItems(props) {
   }, [marketContract, params]);
 
 
-  useEffect(async () => {
+  useEffect(() => {
 
+    loadData();
+    
+  }, [crntType])
+
+  async function loadData () {
     if(typeof crntType !== "undefined" && crntType !== null) {
       if(packType === crntType) {
         const info = await marketContract.methods.viewItemByCollectionAndTokenId(packAddress, params.id).call();
@@ -81,7 +89,7 @@ function PortalItems(props) {
         })
       }
     }
-  }, [crntType])
+  }
 
   const approveHandler = async () => {
     const balance = await tokenContract.methods.balanceOf(account).call();
@@ -90,15 +98,21 @@ function PortalItems(props) {
   }
 
   const buyHandler = async () => {
-    if(item.owner.toLowerCase() === account.toLowerCase()) {
-      dispatch(toastAction("error", "This is your item."));
+      console.log(item.owner, account);
+        if(item.owner.toLowerCase() === account.toLowerCase()) {
+        dispatch(toastAction("error", "This is your item."));
+        return;
+      }
+
+    if(approvedAmount < item.price) {
+      dispatch(toastAction("error", "Insufficient funds."));
       return;
     }
     if(crntType === packType) {
-      await marketContract.methods.buyToken(packAddress, params.id, item.price).send({from: account});
+      await marketContract.methods.buyToken(packAddress, params.id, item.price, packType).send({from: account});
       navigate("/my-packs");
     }else {
-      await marketContract.methods.buyToken(gotchiAddress, params.id, item.price).send({from: account});
+      await marketContract.methods.buyToken(gotchiAddress, params.id, item.price, crntType).send({from: account});
       navigate("/my-gotchis");
     }
     

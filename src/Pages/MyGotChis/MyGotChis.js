@@ -131,7 +131,7 @@ function MyGotChis() {
           </ul>
         )
         case 2:
-          return <EmptyBalance title={"Gotchi"} link={"/"}/>
+          return <EmptyBalance title={"Would you like to buy any item?"} buttonTitle="Visit Market" link={"/"}/>
       default:
         break;
     }
@@ -141,6 +141,7 @@ function MyGotChis() {
   useEffect(() => {
     let result = gotchis.filter(g => crntType === "ALL" ? true : g.type === crntType).filter(g => filterRBy === "NONE" ? true : g.tier === filterRBy).sort((frt, sec) => qSortby === HIGHEST ? sec.quality - frt.quality : frt.quality - sec.quality);
     setFilteredGotchis(result);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ crntType, qSortby, filterRBy ])
 
   return (

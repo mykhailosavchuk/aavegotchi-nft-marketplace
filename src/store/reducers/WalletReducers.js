@@ -1,4 +1,4 @@
-import { SET_BALANCE, SET_GOTCHI_CONTRACT, SET_MARKETPLACE_CONTRACT, SET_PACK_CONTRACT, SET_TOKEN_CONTRACT, SET_WEB3 } from "../actions/WalletActions"
+import { SET_BALANCE, SET_GHST_CONTRACT, SET_GOTCHI_CONTRACT, SET_MARKETPLACE_CONTRACT, SET_PACK_CONTRACT, SET_TOKEN_CONTRACT, SET_WEB3 } from "../actions/WalletActions"
 
 
 const walletReducer = (state = { }, { type, payload }) =>{
@@ -22,6 +22,11 @@ const walletReducer = (state = { }, { type, payload }) =>{
 			return { 
 			  ...state,
 			  tokenContract: payload
+			 }
+		case SET_GHST_CONTRACT:
+			return { 
+			  ...state,
+			  ghstContract: payload
 			 }
 		case SET_GOTCHI_CONTRACT:
 			return { 

@@ -3,9 +3,8 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux"
 import { useMoralis } from "react-moralis"
 import axios from "axios";
-
-import "./MyGotChis.css";
 import Loading from "../../Components/Loading";
+import "./MyGotChis.css";
 
 function MyPacks(props) {
 
@@ -14,9 +13,9 @@ function MyPacks(props) {
   const [ packs, setPacks ] = useState([]);
   const [ assetsState, setAssetsState  ] = useState(0);
 
-  useEffect(async () => {
-    await loadHandler();
-       
+  useEffect(() => {
+    loadHandler();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [packContract, account, chainId]);
 
   const loadHandler = async () => {
@@ -39,9 +38,7 @@ function MyPacks(props) {
       case 0:
         return (
           <ul className="list-unstyled mb-0 tabItemList">
-            <li>
-              <Loading/>
-            </li>
+            <EmptyBalance title={"Don’t have any packs? Visit the Mint page to get some!"} link={"/mint"} buttonTitle={"Mint Packs"}/>
           </ul>
         )    
       case 1:
@@ -141,8 +138,8 @@ export const EmptyBalance = ({title, link, buttonTitle}) => {
 
       <p className="py-3">{title}</p>
 
-    <Link to={link} className="btn btn_visit">{ buttonTitle }</Link>
-  </div>
+      <Link to={link} className="btn btn_visit">{ buttonTitle }</Link>
+    </div>
   )
 }
 

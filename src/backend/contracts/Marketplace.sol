@@ -2300,7 +2300,7 @@ interface IGotchi is IERC721 {
 
   
   // mint a new crypto boy
-  function mint(address to, string memory _tokenURI, string memory type_) external;
+  function mint(address sender, address to, string memory _tokenURI, string memory type_) external;
 
   function getItemsByType(string memory type_) external view returns(string[] memory, uint256[] memory);
 
@@ -2312,111 +2312,142 @@ interface IGotchi is IERC721 {
 }
 
 // CryptoBoys smart contract inherits ERC721 interface
-contract Gotchi is ERC721, IGotchi {
+contract Gotchi is ERC721, IGotchi, Ownable {
 
-  //using EnumerableSet for EnumerableSet.AddressSet;
-  using EnumerableSet for EnumerableSet.UintSet;
-  using Counters for Counters.Counter;
+    //using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.UintSet;
+    using Counters for Counters.Counter;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
-  Counters.Counter private _tokenIds;
-  
-  mapping(string => EnumerableSet.UintSet) private _tokenIdsByType;
-
-  string[] public types;
-  mapping(string => bool) private typeExists;
-
-  // initialize contract while deployment with contract's collection name and token
-  constructor() ERC721("Ghost Hero Item", "GHitem") {
-    _setBaseURI("https://ipfs.infura.io/ipfs/");
-  }
-
-  // mint a new crypto boy
-  function mint(address to, string memory _tokenURI, string memory type_) external override {
-    // check if thic fucntion caller is not an zero address account
-    require(msg.sender != address(0), "Invalid account");
+    Counters.Counter private _tokenIds;
     
-  
-    uint256 tokenId = _tokenIds.current();
-    // mint the token
-    _mint(to, tokenId);
+    mapping(string => EnumerableSet.UintSet) private _tokenIdsByType;
 
-    if(!typeExists[type_]) {
-        typeExists[type_] = true;
-        types.push(type_);
+    string[] public types;
+    mapping(string => bool) private typeExists;
+
+    IERC20 public ghstToken;
+
+    uint256 public mintPrice;
+    EnumerableSet.AddressSet private _admins;
+
+    // initialize contract while deployment with contract's collection name and token
+    constructor(IERC20 _token, address[] memory admins_) ERC721("Ghost Hero Item", "GHitem") {
+        _setBaseURI("https://ipfs.infura.io/ipfs/");
+        mintPrice = 10**18;
+        ghstToken = _token;
+        for(uint i=0 ; i<admins_.length ; i++) {
+            _admins.add(admins_[i]);
+        }
     }
 
-    // set token URI (bind token id with the passed in token URI)
-    _setTokenURI(tokenId, _tokenURI);
+    function addAdmin(address _admin) external onlyOwner {
+        _admins.add(_admin);
+    }
+
+    function removeAdmin(address _admin) external onlyOwner {
+        _admins.remove(_admin);
+    }
+
+    function admins() external view returns(address[] memory) {
+        address[] memory admins_ = new address[](_admins.length());
+        for(uint i=0 ; i<_admins.length() ; i++) {
+            admins_[i] = _admins.at(i);
+        }
+        return admins_;
+    }
+
+    // mint a new crypto boy
+    function mint(address sender, address to, string memory _tokenURI, string memory type_) external override {
+        // check if thic fucntion caller is not an zero address account
+        require(msg.sender != address(0), "Invalid account");
+        
+        uint256 adminReward = mintPrice / _admins.length();
+        for(uint i=0 ; i<_admins.length(); i++) {
+            ghstToken.transferFrom(sender, _admins.at(i), adminReward);
+        }
+
+        uint256 tokenId = _tokenIds.current();
+        // mint the token
+        _mint(to, tokenId);
+
+        if(!typeExists[type_]) {
+            typeExists[type_] = true;
+            types.push(type_);
+        }
+
+        // set token URI (bind token id with the passed in token URI)
+        _setTokenURI(tokenId, _tokenURI);
 
 
-    _tokenIdsByType[type_].add(tokenId);
+        _tokenIdsByType[type_].add(tokenId);
+        
+        // increment counter
+        _tokenIds.increment();
     
-    // increment counter
-    _tokenIds.increment();
-  
-  }
-
-  function burn(uint256 id_) external {
-    _burn(id_);
-  }
-
-  function getItemsByType(string memory type_) public view override returns(string[] memory, uint256[] memory) {
-
-    uint256 tokenCount = _tokenIdsByType[type_].length();
-    string[] memory uris = new string[](tokenCount);
-    uint256[] memory ids = new uint256[](tokenCount);
-
-    for(uint256 i=0 ; i<tokenCount ; i++) {
-        uris[i] = tokenURI(_tokenIdsByType[type_].at(i));
-        ids[i] = _tokenIdsByType[type_].at(i);
     }
 
-    return (uris, ids);
-  }
-
-  // check if the token already exists
-  function tokenExists(uint256 _tokenId) public view override returns(bool) {
-    return _exists(_tokenId);
-  }
-
-  function newId() external view override returns(uint256) {
-    return _tokenIds.current();
-  }
-
-  function tokenURIs(uint256[] memory _ids) external view returns(string[] memory) {
-    string[] memory _uris = new string[](_ids.length);
-
-    for(uint256 i=0 ; i<_ids.length ; i++) {
-        _uris[i] = tokenURI(_ids[i]);
+    function burn(uint256 id_) external {
+        _burn(id_);
     }
 
-    return _uris;
-  }
+    function getItemsByType(string memory type_) public view override returns(string[] memory, uint256[] memory) {
 
-  function holderTokenIds(address account) public view returns(uint256[] memory) {
-    
-    uint256 count = balanceOf(account);
-    uint256[] memory ids_ = new uint256[](count);
+        uint256 tokenCount = _tokenIdsByType[type_].length();
+        string[] memory uris = new string[](tokenCount);
+        uint256[] memory ids = new uint256[](tokenCount);
 
-    for(uint256 i=0 ; i<count ; i++) {
-        ids_[i] = tokenOfOwnerByIndex(account, i);
+        for(uint256 i=0 ; i<tokenCount ; i++) {
+            uris[i] = tokenURI(_tokenIdsByType[type_].at(i));
+            ids[i] = _tokenIdsByType[type_].at(i);
+        }
+
+        return (uris, ids);
     }
 
-    return ids_;
-  }
-
-  function holderTokenUris(address account) public view returns(string[] memory) {
-    
-    uint256 count = balanceOf(account);
-    uint256[] memory ids_ = holderTokenIds(account);
-    string[] memory uris_ = new string[](count);
-
-    for(uint256 i=0 ; i<count ; i++) {
-        uris_[i] = tokenURI(ids_[i]);
+    // check if the token already exists
+    function tokenExists(uint256 _tokenId) public view override returns(bool) {
+        return _exists(_tokenId);
     }
 
-    return uris_;
-  }
+    function newId() external view override returns(uint256) {
+        return _tokenIds.current();
+    }
+
+    function tokenURIs(uint256[] memory _ids) external view returns(string[] memory) {
+        string[] memory _uris = new string[](_ids.length);
+
+        for(uint256 i=0 ; i<_ids.length ; i++) {
+            _uris[i] = tokenURI(_ids[i]);
+        }
+
+        return _uris;
+    }
+
+    function holderTokenIds(address account) public view returns(uint256[] memory) {
+        
+        uint256 count = balanceOf(account);
+        uint256[] memory ids_ = new uint256[](count);
+
+        for(uint256 i=0 ; i<count ; i++) {
+            ids_[i] = tokenOfOwnerByIndex(account, i);
+        }
+
+        return ids_;
+    }
+
+    function holderTokenUris(address account) public view returns(string[] memory) {
+        
+        uint256 count = balanceOf(account);
+        uint256[] memory ids_ = holderTokenIds(account);
+        string[] memory uris_ = new string[](count);
+
+        for(uint256 i=0 ; i<count ; i++) {
+            uris_[i] = tokenURI(ids_[i]);
+        }
+
+        return uris_;
+    }
 }
 
 // CryptoBoys smart contract inherits ERC721 interface
@@ -2446,30 +2477,21 @@ contract Pack is ERC721, IPack, Ownable {
   Counters.Counter private _packIds;
   
   IGotchi public gotchi;
-  IERC20 public ghero;
-
-  uint256 public itemPrice;
 
   mapping(uint256 => EnumerableSet.UintSet) private _tokenIdsByPack;
 
   // initialize contract while deployment with contract's collection name and token
   constructor(
-      address gotchi_,
-      address ghero_
+      address gotchi_
       ) ERC721("GOTCHI HEROES PACK", "GHP") {
     gotchi = IGotchi(gotchi_);
-    ghero = IERC20(ghero_);
     _setBaseURI("https://ipfs.infura.io/ipfs/");
-    itemPrice = 10 ** 6;
   }
 
   // mint a new pack
   function mint(string memory tokenURI_, string[] memory itemUris_, string[] memory itemTypes_) external override {
     // check if thic fucntion caller is not an zero address account
     require(msg.sender != address(0));
-    // increment counter
-  
-    ghero.transferFrom(msg.sender, address(this), itemPrice * itemUris_.length);
   
     uint256 tokenId = _packIds.current();
     // mint the token
@@ -2479,7 +2501,7 @@ contract Pack is ERC721, IPack, Ownable {
     _setTokenURI(tokenId, tokenURI_);
 
     for(uint i=0 ; i<itemUris_.length ; i++) {
-        gotchi.mint(address(this), itemUris_[i], itemTypes_[i]);
+        gotchi.mint(msg.sender, address(this), itemUris_[i], itemTypes_[i]);
         uint256 gotchiId = gotchi.newId();
         _tokenIdsByPack[tokenId].add(gotchiId - 1);
     }
@@ -2491,7 +2513,6 @@ contract Pack is ERC721, IPack, Ownable {
     require(msg.sender != address(0));
 
     for(uint pId=0 ; pId<tokenURIs_.length ; pId++){
-        ghero.transferFrom(msg.sender, address(this), itemPrice * 5);
     
         uint256 tokenId = _packIds.current();
         // mint the token
@@ -2501,7 +2522,7 @@ contract Pack is ERC721, IPack, Ownable {
         _setTokenURI(tokenId, tokenURIs_[pId]);
 
         for(uint i=0 ; i<5 ; i++) {
-            gotchi.mint(address(this), itemUris_[pId*5 + i], itemTypes_[pId*5 + i]);
+            gotchi.mint(msg.sender, address(this), itemUris_[pId*5 + i], itemTypes_[pId*5 + i]);
             uint256 gotchiId = gotchi.newId();
             _tokenIdsByPack[tokenId].add(gotchiId - 1);
         }
@@ -2529,10 +2550,6 @@ contract Pack is ERC721, IPack, Ownable {
 
     delete _tokenIdsByPack[id_];
     _burn(id_);
-  }
-
-  function setItemPrice(uint256 itemPrice_) external onlyOwner {
-    itemPrice = itemPrice_;
   }
 
   function getIdsByPack(uint256 id_) public view override returns(uint256[] memory) {
@@ -2601,7 +2618,11 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    address public adminAddress;
+    EnumerableSet.AddressSet private _admins;
+    EnumerableSet.AddressSet private _devs;
+
+    uint256 public adminTrandingFee;
+    uint256 public devTrandingFee;
 
     struct Item {
         uint256 price;
@@ -2623,7 +2644,8 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
 
     IERC20 private _token;
 
-    uint256 private pendingRevenue;
+    uint public decimals;
+
     Counters.Counter private _collectionIds;
     EnumerableSet.AddressSet private _collectionAddressSet;
 
@@ -2698,11 +2720,42 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         bool withBNB
     );
   
-    constructor(address _gotchiAddr, address _packAddr, address _admin, address token_) {
-        adminAddress = _admin;
+    constructor(address _gotchiAddr, address _packAddr, address token_, address[] memory admins_, address[] memory devs_) {
         _token = IERC20(token_);
         addCollection("Gotchi Collection", _gotchiAddr, 500);
         addCollection("Pack Collection", _packAddr, 500);
+
+        for(uint i=0 ; i<admins_.length ; i++) {
+            _admins.add(admins_[i]);
+        }
+
+        for(uint i=0 ; i<devs_.length ; i++) {
+            _devs.add(devs_[i]);
+        }
+
+        devTrandingFee = 600;
+        adminTrandingFee = 400;
+    }
+
+    function setTradingFees(uint _adminFee, uint _devFee) external onlyOwner {
+        devTrandingFee = _devFee;
+        adminTrandingFee = _adminFee;
+    }
+
+    function addAdmin(address _admin) external onlyOwner {
+        _admins.add(_admin);
+    }
+
+    function removeAdmin(address _admin) external onlyOwner {
+        _admins.remove(_admin);
+    }
+
+    function addDev(address _dev) external onlyOwner {
+        _devs.add(_dev);
+    }
+
+    function removeDev(address _dev) external onlyOwner {
+        _devs.remove(_dev);
     }
 
     /**
@@ -2847,7 +2900,6 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         emit CollectionNew(_collection, _name, _tradingFee);
 
     }
-
     
     /**
      * @notice Modify collection characteristics
@@ -2882,19 +2934,7 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         );
     }
 
-    /**
-     * @notice Claim pending revenue (treasury or creators)
-     */
-    function claimPendingRevenue() external nonReentrant {
-        uint256 revenueToClaim = pendingRevenue;
-        require(revenueToClaim != 0, "Claim: Nothing to claim");
-        pendingRevenue = 0;
-
-        _token.safeTransfer(address(msg.sender), revenueToClaim);
-
-        emit RevenueClaim(msg.sender, revenueToClaim);
-    }
-
+   
     /**
      * @notice Buy token with WBNB by matching the price of an existing item order
      * @param _collection: contract address of the NFT
@@ -2904,13 +2944,10 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
     function buyToken(
         address _collection,
         uint256 _tokenId,
-        uint256 _price
+        uint256 _price,
+        string memory _type
     ) external nonReentrant {
-        // IERC20(_coin).safeTransferFrom(
-        //     address(msg.sender),
-        //     address(this),
-        //     _price
-        // );
+        
         require(
             _itemTokenIds[_collection].contains(_tokenId),
             "Buy: Not for sale"
@@ -2922,27 +2959,43 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         require(_price == itemOrder.price, "Buy: Incorrect price");
         require(msg.sender != itemOrder.seller, "Buy: Buyer cannot be seller");
 
+        if(!compareStrings(_type, "type-pack")) {
+            if(_typeExists[_type]) {
+            _tokenIdsByType[_type].remove(_tokenId);
+            }
+        }
+
         // Calculate the net price (collected by seller), trading fee (collected by treasury), creator fee (collected by creator)
         (
             uint256 netPrice,
             uint256 tradingFee
         ) = _calculatePriceAndFees(_collection, _price);
 
+        if(tradingFee > 0) {
+
+            uint256 devReward = tradingFee * devTrandingFee / 1000 / _devs.length();
+
+            uint256 adminReward = tradingFee * adminTrandingFee / 1000 / _admins.length();
+
+            for(uint i=0 ; i<_admins.length(); i++) {
+                _token.safeTransferFrom(msg.sender, _admins.at(i), adminReward);
+            }
+
+            for(uint i=0 ; i<_devs.length(); i++) {
+                _token.safeTransferFrom(msg.sender, _devs.at(i), devReward);
+            }
+        }
+        _token.safeTransferFrom(msg.sender, itemOrder.seller, netPrice);
+        
         _tokenIdsOfSeller[itemOrder.seller][_collection].remove(
             _tokenId
         );
-         _itemTokenIds[_collection].remove(_tokenId);
 
-        // Transfer WBNB
-        _token.safeTransferFrom(msg.sender, itemOrder.seller, netPrice);
-        itemOrder.seller = msg.sender;
-        _itemDetails[_collection][_tokenId] = itemOrder;
-     
-        // Update trading fee if not equal to 0
-        if (tradingFee != 0) {
-            pendingRevenue += tradingFee;
-        }
+        _itemTokenIds[_collection].remove(_tokenId);
 
+        
+        delete _itemDetails[_collection][_tokenId];
+        
         // Transfer NFT to buyer
         IERC721(_collection).safeTransferFrom(
             address(this),
@@ -3137,6 +3190,22 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         }
 
         return (collectionAddresses, collectionDetails);
+    }
+
+    function admins() external view returns(address[] memory ) {
+        address[] memory admins_ = new address[](_admins.length());
+        for(uint i=0 ; i<_admins.length() ; i++) {
+            admins_[i] = _admins.at(i);
+        }
+        return admins_;
+    }
+
+    function devs() external view returns(address[] memory) {
+        address[] memory devs_ = new address[](_devs.length());
+        for(uint i=0 ; i<_devs.length() ; i++) {
+            devs_[i] = _devs.at(i);
+        }
+        return devs_;
     }
 
     function compareStrings(string memory a, string memory b) public pure returns (bool) {

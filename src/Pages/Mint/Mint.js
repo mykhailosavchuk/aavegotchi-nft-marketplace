@@ -2,70 +2,84 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useMoralis } from "react-moralis"
 import { useSelector, useDispatch } from "react-redux"
 import { create as ipfsHttpClient } from "ipfs-http-client";
-import { decimals, defaultPackId, ipfsLink, packAddress } from "../../config/constances"
+import { decimals, defaultPackId, gotchiAddress, ipfsLink, packAddress } from "../../config/constances"
 import axios from "axios";
 import { setLoadingAction, setLoadingLabelAction } from "../../store/actions/GlobalActions";
-import { toastAction } from "../../store/actions/ToastActions";
 import { useNavigate } from "react-router-dom"
+import { toastAction } from "../../store/actions/ToastActions";
 
 const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
 
 function Mint() {
 
   const dispatch = useDispatch();
-  const tokenContract  = useSelector(state => state.wallet.tokenContract);
+  const ghstContract  = useSelector(state => state.wallet.ghstContract);
   const gotchiContract  = useSelector(state => state.wallet.gotchiContract);
   const packContract  = useSelector(state => state.wallet.packContract);
   const { account, isAuthenticated } = useMoralis();
   const [ count, setCount ] = useState(-1);
   const navigate = useNavigate();
-  const uris = [];
-  const types = [];
 
   const [ isApproved, setIsApproved ] = useState(false);
 
   useEffect(() => {
     initialAction();
-  }, [tokenContract])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ghstContract, account])
 
   const initialAction = async () => {
-    if(typeof tokenContract !== "undefined" && tokenContract !== null) {
-      const amount = await tokenContract.methods.allowance(account, packAddress).call();
+    if(typeof ghstContract !== "undefined" && ghstContract !== null) {
+      const amount = await ghstContract.methods.allowance(account, gotchiAddress).call();
 
-      if(Number.parseInt(amount) > 5*Math.pow(10, decimals)) {
+      const balance = await ghstContract.methods.decimals().call();
+      console.log(balance)
+
+      if(Number.parseInt(amount) > 500*Math.pow(10, 18)) {
         setIsApproved(true)
       }
     }
   }
 
-
   const approveHandler = async () => {
-    const balance = await tokenContract.methods.balanceOf(account).call();
-    await tokenContract.methods.approve(packAddress, balance).send({from: account});
+    const balance = await ghstContract.methods.balanceOf(account).call();
+    await ghstContract.methods.approve(gotchiAddress, balance).send({from: account});
     setIsApproved(true)
   }
 
   const mintPackHandler = async () => {
     if(isAuthenticated) {
       try {
-        uris = [];
-        types = [];
+        window.uris_ = [];
+        window.types_ = [];
+
+        if(count < 0) {
+          dispatch(toastAction("error", "Please select pack type first."));
+          return;
+        }
 
         dispatch(setLoadingLabelAction("Minting Pack"));
         dispatch(setLoadingAction(true));
-
         
-        let itemCnt = 5;
+        window.itemCnt = 5;
         if(count === 0) {
-          itemCnt = 10;
+          window.itemCnt = 8;
         }else if(count > 0) {
-          itemCnt = count * 5;
+          window.itemCnt = count * 5;
         }
-        const { packId, uris, types } = await getDetails(itemCnt);
-        await packContract.methods.mint(defaultPackId, uris, types).send({from: account});
+        
+        const { packId, uris, types } = await getDetails(window.itemCnt);
+
+        if(count < 2) {
+          await packContract.methods.mint(defaultPackId, uris, types).send({from: account});
+        }else if(count > 1) {
+          let packIds = Array(count).fill().map((_) => defaultPackId);
+          await packContract.methods.mintBatch(packIds, uris, types).send({from: account});
+        }
+
         dispatch(setLoadingAction(false));
         navigate(`/my-pack-details/${packId}`);
-      }catch {
+      }catch (e) {
+        console.log(e)
         dispatch(setLoadingAction(false));
       }
     }
@@ -93,44 +107,77 @@ function Mint() {
       item = await client.add(JSON.stringify(data));
       await axios.get(`${ipfsLink}${item.path}`)
     }catch {
-      //dispatch(toastAction("error", "IPFS server Error!, please try again"));
+        await sleep(5000)
+        console.log("error: upload to ipfs")
+        //dispatch(toastAction("error", "IPFS server Error!, please try again"));
       return null;
     }
     return item;
   }
 
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   const fetchItems = async (itemCnt) => {
+    console.log("fetch items", itemCnt)
     let url = "";
     if(count === 0){
       url = `https://gotchiheroes.com/server/generator.php?count=${itemCnt}&starterPack=true`;
     }else if(count > 0) {
       url = `https://gotchiheroes.com/server/generator.php?count=${itemCnt}`;
     }
-    let res = await axios.get(url);
+    let res = null;
+    try {
+      res = await axios.get(url);
+      
+    }catch {
+      console.log("fetch error")
+      await sleep(5000)
+      return await fetchItems(itemCnt);
+    }
+    
     if(!res.data.items.map(i => i.tier.toLowerCase()).includes("rare")) {
-      res = await fetchItems();
+      return await fetchItems(itemCnt);
     }
     return res;
   }
 
   const getDetails = async (itemCnt) => {
+    console.log("start get details", itemCnt, window.itemCnt)
     const res = await fetchItems(itemCnt);
-    
+
+    console.log(res.data.items.length)
     let gotchiId = await gotchiContract.methods.newId().call();
+
+    console.log("getDetails", itemCnt);
     for(let i=0 ; i<res.data.items.length ; i++){
       let newGotchi = {
         id: gotchiId ++,
         createdAt: Date.now(),
         ...res.data.items[i]
       }
-      
-      let item = await uploadToIpfs(newGotchi);
+      console.log(newGotchi)
+
+      let item = null;
+      try {
+        item = await uploadToIpfs(newGotchi);
+      }catch {
+       console.log("catch error-----------") 
+      }
+      console.log(item)
       if(typeof item === "undefined" || item === null) {
-        return await getDetails(itemCnt - uris.length);
+        console.log("will call getdetails", window.itemCnt, window.uris_.length, window.itemCnt - window.uris_.length)
+        return await getDetails(window.itemCnt - window.uris_.length);
       }
 
-      types.push(newGotchi.type);
-      uris.push(item.path);
+      console.log(window.types_.length)
+
+      window.types_.push(newGotchi.type);
+      window.uris_.push(item.path)
+      if(window.itemCnt%window.types_.length === 0) {
+        dispatch(toastAction("success", "A pack is minted!"))
+      }
     }
 
     // const newPcak = {
@@ -144,8 +191,8 @@ function Mint() {
 
     return {
       packId,
-      uris,
-      types,
+      uris: window.uris_,
+      types: window.types_,
     }
 
   }

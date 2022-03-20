@@ -9,7 +9,6 @@ import { setTypeAction, setTypesAction } from "../../store/actions/GlobalActions
 import tokenLogo from "../../Static/img/logo.png"
 
 import "./Marketplace.css";
-import Loading from "../../Components/Loading";
 
 function PortalClosed() {
 
@@ -24,65 +23,75 @@ function PortalClosed() {
   const { account, chainId } = useMoralis();
   const [ sortBy, setSortBy ] = useState(LOWEST_PRICE)
 
-  useEffect(async () => {
-    if(typeof marketContract !== "undefined" && marketContract !== null) {
-      try {
-        const _types = await marketContract.methods.types().call();
-        dispatch(setTypesAction([..._types, packType]));
-        if(typeof params.type === "undefined" ||  params.type === null){
-          dispatch(setTypeAction(_types[0]));
-        }
-        
-      }catch {}
-    }
+  useEffect(() => {
+
+    (async () => {
+      if(typeof marketContract !== "undefined" && marketContract !== null) {
+        try {
+          const _types = await marketContract.methods.types().call();
+          dispatch(setTypesAction([..._types, packType]));
+          if(typeof params.type === "undefined" ||  params.type === null){
+            dispatch(setTypeAction(_types[0]));
+          }
+          
+        }catch {}
+      }  
+    })()
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketContract, account, chainId ]);
 
   useEffect(() => {
     if(typeof params.type !== "undefined" &&  params.type !== null){
       dispatch(setTypeAction(params.type));
     }
-  }, [params, types ])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params, types])
 
-  useEffect(async () => {
+  useEffect(() => {
+    (async () => {
 
-    if(typeof crntType !== "undefined" && crntType !== null) {
-      try {
-        let _items = [];
-        if(packType === crntType) {
-          const result = await marketContract.methods.viewItemsByCollection(packAddress).call();
-          for(let i=0 ; i<result[0].length ; i++) {
-            const res = await axios.get(result[1][i]);
-            _items.push({
-              id: result[0][i],
-              name: res.data.name,
-              description: res.data.description,
-              owner: result[2][i].seller,
-              price: result[2][i].price,
-              image: res.data.image,
-            });
-          }
-  
-        }else {
-          const result = await marketContract.methods.viewItemsByType(crntType).call();
-          for(let i=0 ; i<result[0].length ; i++) {
-            const res = await axios.get(result[1][i]);
-            _items.push({
-              id: result[0][i],
-              name: res.data.name,
-              tier: res.data.tier,
-              sprite: res.data.sprite,
-              owner: result[2][i].seller,
-              price: result[2][i].price,
-              image: `${hostingLink}${res.data.spriteIMG}`,
-              perks: res.data.perks
-            });
-          }
-        }
-        
-        setItems(_items);
-      }catch {}
-    }
+      if(typeof crntType !== "undefined" && crntType !== null) {
+        try {
+          let _items = [];
+          if(packType === crntType) {
+            const result = await marketContract.methods.viewItemsByCollection(packAddress).call();
+            for(let i=0 ; i<result[0].length ; i++) {
+              const res = await axios.get(result[1][i]);
+              _items.push({
+                id: result[0][i],
+                name: res.data.name,
+                description: res.data.description,
+                owner: result[2][i].seller,
+                price: result[2][i].price,
+                image: res.data.image,
+              });
+            }
     
+          }else {
+            const result = await marketContract.methods.viewItemsByType(crntType).call();
+            for(let i=0 ; i<result[0].length ; i++) {
+              const res = await axios.get(result[1][i]);
+              _items.push({
+                id: result[0][i],
+                name: res.data.name,
+                tier: res.data.tier,
+                sprite: res.data.sprite,
+                owner: result[2][i].seller,
+                price: result[2][i].price,
+                image: `${hostingLink}${res.data.spriteIMG}`,
+                perks: res.data.perks
+              });
+            }
+          }
+          
+          setItems(_items);
+        }catch {}
+      }
+
+    })()
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [crntType, types])
 
   useEffect(() => {
@@ -197,9 +206,17 @@ function PortalClosed() {
 
               <div className="tabItemContent">
                 {items.length === 0 ? (
-                  <ul className="list-unstyled mb-0 tabItemList">
-                    <Loading/>
-                  </ul>
+                  <div className="tabItemList ">
+                    <div className="d-flex justify-content-center align-content-center p-5">
+                      <img
+
+                        style={{ height: "100px" }}
+                        src={require("../../Static/img/icon_img/baazaar.png").default}
+                        alt="img"
+                      />
+                    </div>
+                    <h3 className="d-flex justify-content-center align-content-center pb-3">Empty</h3>
+                  </div>
                 ) : 
                 crntType === packType ?
                 (
