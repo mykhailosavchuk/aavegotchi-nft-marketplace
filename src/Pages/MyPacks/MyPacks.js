@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux"
 import { useMoralis } from "react-moralis"
 import axios from "axios";
-import Loading from "../../Components/Loading";
 import "./MyGotChis.css";
 
 function MyPacks(props) {
@@ -92,15 +91,12 @@ function MyPacks(props) {
                               </li>
                               <li>
                               </li>
-                             
                             </ul>
-                          
                           </div>
                         </div>
                       </div>
                     </div>
                   </Link>
-
                 </li>
               );
             })}

@@ -22,8 +22,11 @@ function MyItems() {
   const [ filteredGotchis, setFilteredGotchis ] = useState([]);
   const [ assetsState, setAssetsState  ] = useState(0);
 
-  useEffect(async () => {
+  useEffect(() => {
+    loadData();
+  }, [gotchiContract, chainId, account]);
 
+  const loadData = async () => {
     if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
       let result = await marketContract.methods.viewItemsByCollectionAndSeller(gotchiAddress, account).call();
       let _gotchis = [];
@@ -65,7 +68,7 @@ function MyItems() {
       }
       setPacks(_packs)
     }
-  }, [gotchiContract, chainId, account]);
+  }
 
   useEffect(() => {
     packs?.length === 0 ? setAssetsState(2) : setAssetsState(1);
@@ -81,9 +84,7 @@ function MyItems() {
       case 0:
           return (
             <ul className="list-unstyled mb-0 tabItemList">
-              <li>
                 <Loading/>
-              </li>
             </ul>
           )
         case 1:
