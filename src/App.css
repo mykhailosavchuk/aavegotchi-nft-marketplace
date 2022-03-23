@@ -13,7 +13,7 @@
 :root {
   --dark-hidden: flex;
   --light-hidden: none;
-  --col-pink-300: #fa34f3;
+  --col-pink-300: green;
   --col-pink-400: #cf15f9;
   --col-pink-500: #ac15f9;
   --col-default-pink: #fa34f3;
@@ -129,9 +129,9 @@ html {
 
 body {
   color: var(--col-text) !important;
-  background: var(--theme-body-bg) !important;
+  background: var(--theme-body-bg);
   background-attachment: fixed !important;
-  background-image: url("./Static/img/ghostbg.svg"), none !important;
+  background-image: url("./Static/img/ghostbg.svg"), none;
   background-position: 0 0;
   background-repeat: repeat;
   background-size: 300px;
@@ -232,7 +232,23 @@ h6, p {
 
 [data-theme="dark-theme"] body {
   background-blend-mode: overlay;
-  background: #080315 !important;
+  /* background: #080315 !important; */
+
+  background: url("./Static/img/body-bg.jpg");
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  margin: 0;
+  min-height: 100%;
+  min-width: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overflow: visible;
+  padding: 0;
+  width: 100%;
+  font-size: 16px !important;
 }
 
 [data-theme="dark-theme"] * {

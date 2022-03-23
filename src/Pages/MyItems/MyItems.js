@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux"
 import { useMoralis } from "react-moralis"
 import axios from "axios";
+import { Loader } from 'rsuite';
+import { Placeholder } from 'rsuite';
 
 import { gotchiAddress, hostingLink, packAddress, secondKeys } from "../../config/constances";
 import { formatPrice } from "../../utils/formatHelpers";
 import "./MyItems.css";
-import Loading from "../../Components/Loading";
 
 function MyItems() {
   const gotchiContract  = useSelector(state => state.wallet.gotchiContract);
@@ -15,6 +16,7 @@ function MyItems() {
   const { account, chainId } = useMoralis();
   const [ selectedCategory, setSelectedCategory ] = useState(0);
   const [ crntType, setCrntType ] = useState();
+  const { Paragraph } = Placeholder;
 
   const [ gotchis, setGotchis ] = useState([]);
   const [ packs, setPacks ] = useState([]);
@@ -28,45 +30,51 @@ function MyItems() {
 
   const loadData = async () => {
     if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
-      let result = await marketContract.methods.viewItemsByCollectionAndSeller(gotchiAddress, account).call();
-      let _gotchis = [];
-      for(let i=0 ; i<result[0].length ; i++) {
-        const res = await axios.get(result[1][i]);
-        
-        _gotchis.push({
-          id: result[0][i],
-          name: res.data.name,
-          type: res.data.type,
-          tier: res.data.tier,
-          sprite: res.data.sprite,
-          price: result[2][i].price,
-          image: `${hostingLink}${res.data.spriteIMG}`,
-          perks: res.data.perks
-        });
+      try {
+        let result = await marketContract.methods.viewItemsByCollectionAndSeller(gotchiAddress, account).call();
+        let _gotchis = [];
+        for(let i=0 ; i<result[0].length ; i++) {
+          const res = await axios.get(result[1][i]);
+          
+          _gotchis.push({
+            id: result[0][i],
+            name: res.data.name,
+            type: res.data.type,
+            tier: res.data.tier,
+            sprite: res.data.sprite,
+            price: result[2][i].price,
+            image: `${hostingLink}${res.data.spriteIMG}`,
+            perks: res.data.perks
+          });
+        }
+
+        _gotchis.length === 0 ? setAssetsState(2) : setAssetsState(1);
+
+        let _types = _gotchis.map(g => g.type).filter((t, idx, self) => self.indexOf(t) === idx);
+        setTypes(_types);
+        setGotchis(_gotchis)
+        setCrntType(_types[0]);
+
+        result = await marketContract.methods.viewItemsByCollectionAndSeller(packAddress, account).call();
+        let _packs = [];
+        for(let i=0 ; i<result[0].length ; i++) {
+          const res = await axios.get(result[1][i]);
+          
+          _packs.push({
+            id: result[0][i],
+            name: res.data.name,
+            description: res.data.description,
+            owner: result[2][i].seller,
+            price: result[2][i].price,
+            image: res.data.image
+          });
+        }
+        setPacks(_packs)
+      }catch {
+        setAssetsState(2)
       }
-
-      _gotchis.length === 0 ? setAssetsState(2) : setAssetsState(1);
-
-      let _types = _gotchis.map(g => g.type).filter((t, idx, self) => self.indexOf(t) === idx);
-      setTypes(_types);
-      setGotchis(_gotchis)
-      setCrntType(_types[0]);
-
-      result = await marketContract.methods.viewItemsByCollectionAndSeller(packAddress, account).call();
-      let _packs = [];
-      for(let i=0 ; i<result[0].length ; i++) {
-        const res = await axios.get(result[1][i]);
-        
-        _packs.push({
-          id: result[0][i],
-          name: res.data.name,
-          description: res.data.description,
-          owner: result[2][i].seller,
-          price: result[2][i].price,
-          image: res.data.image
-        });
-      }
-      setPacks(_packs)
+    }else {
+      setAssetsState(2)
     }
   }
 
@@ -83,9 +91,9 @@ function MyItems() {
     switch (assetsState) {
       case 0:
           return (
-            <ul className="list-unstyled mb-0 tabItemList">
-                <Loading/>
-            </ul>
+            <Paragraph style={{ marginTop: 30 }} graph="image" rows={3}>
+              <Loader center content="Loading..." />
+            </Paragraph>
           )
         case 1:
           return (

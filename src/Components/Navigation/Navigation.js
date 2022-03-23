@@ -385,7 +385,7 @@ function Navigation(props) {
                       }
                 }}>
                     <div className="center">
-                      <img src={c.icon} style={{width: "50px"}} className="img-fluid"/>
+                      <img src={c.icon} style={{width: "50px"}} className="img-fluid" alt="logo"/>
                     </div>
                     <span className="center">
                       { c.name }

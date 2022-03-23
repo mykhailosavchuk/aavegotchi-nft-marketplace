@@ -5,10 +5,9 @@ import { useSelector } from "react-redux"
 import { useMoralis } from "react-moralis"
 import axios from "axios";
 import { hostingLink, secondKeys } from "../../config/constances";
-import { LazyLoadImage } from 'react-lazy-load-image-component';
-import 'react-lazy-load-image-component/src/effects/blur.css';
+import { Loader } from 'rsuite';
+import { Placeholder } from 'rsuite';
 import "./MyGotChis.css";
-import Loading from "../../Components/Loading";
 
 const LOWEST = "LOWEST";
 const HIGHEST = "HIGHEST";
@@ -16,6 +15,7 @@ const HIGHEST = "HIGHEST";
 function MyGotChis() {
   const gotchiContract  = useSelector(state => state.wallet.gotchiContract);
   const { account, chainId } = useMoralis();
+  const { Paragraph } = Placeholder;
 
   const [ gotchis, setGotchis ] = useState([]);
   const [ filteredGotchis, setFilteredGotchis ] = useState([]);
@@ -34,25 +34,31 @@ function MyGotChis() {
 
   const loadData = async () => {
     if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
-      const uris = await gotchiContract.methods.holderTokenUris(account).call();
-      const ids = await gotchiContract.methods.holderTokenIds(account).call();
-      let _gotchis = [];
-      for(let i=0 ; i<uris.length ; i++) {
-        try {
-          const res = await axios.get(uris[i]);
-          let newGotchi = {...res.data, id: ids[i]};
+      try {
+        const uris = await gotchiContract.methods.holderTokenUris(account).call();
+        const ids = await gotchiContract.methods.holderTokenIds(account).call();
+        let _gotchis = [];
+        for(let i=0 ; i<uris.length ; i++) {
+          try {
+            const res = await axios.get(uris[i]);
+            let newGotchi = {...res.data, id: ids[i]};
 
-          _gotchis.push(newGotchi);
-        } catch {}
+            _gotchis.push(newGotchi);
+          } catch {}
+        }
+        _gotchis.length === 0 ? setAssetsState(2) : setAssetsState(1);
+        let _types = _gotchis.map(g => g.type).filter((t, idx, self) => self.indexOf(t) === idx);
+        let _rarities = _gotchis.map(g => g.tier).filter((t, idx, self) => self.indexOf(t) === idx);
+        setRarities(_rarities);
+        setTypes(_types);
+        setFilterRBy(_rarities[0])
+        setGotchis(_gotchis);
+        setCrntType(_types[0]);
+      }catch {
+        setAssetsState(2)
       }
-      _gotchis.length === 0 ? setAssetsState(2) : setAssetsState(1);
-      let _types = _gotchis.map(g => g.type).filter((t, idx, self) => self.indexOf(t) === idx);
-      let _rarities = _gotchis.map(g => g.tier).filter((t, idx, self) => self.indexOf(t) === idx);
-      setRarities(_rarities);
-      setTypes(_types);
-      setFilterRBy(_rarities[0])
-      setGotchis(_gotchis);
-      setCrntType(_types[0]);
+    }else {
+      setAssetsState(2)
     }
   }
 
@@ -60,11 +66,9 @@ function MyGotChis() {
     switch (assetsState) {
       case 0:
         return (
-          <ul className="list-unstyled mb-0 tabItemList">
-            <li>
-              <Loading/>
-            </li>
-          </ul>
+          <Paragraph style={{ marginTop: 30 }} graph="image" rows={3}>
+            <Loader center content="Loading..." />
+          </Paragraph>
         )    
       case 1:
         return (

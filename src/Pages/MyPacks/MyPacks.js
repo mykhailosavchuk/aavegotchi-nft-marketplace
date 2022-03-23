@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux"
 import { useMoralis } from "react-moralis"
 import axios from "axios";
+import { Loader } from 'rsuite';
+import { Placeholder } from 'rsuite';
 import "./MyGotChis.css";
 
 function MyPacks(props) {
@@ -11,6 +13,7 @@ function MyPacks(props) {
   const { account, chainId } = useMoralis();
   const [ packs, setPacks ] = useState([]);
   const [ assetsState, setAssetsState  ] = useState(0);
+  const { Paragraph } = Placeholder;
 
   useEffect(() => {
     loadHandler();
@@ -19,16 +22,24 @@ function MyPacks(props) {
 
   const loadHandler = async () => {
     if(typeof packContract !== "undefined" && packContract !== null) {
-      const uris = await packContract.methods.holderTokenUris(account).call();
-      const ids = await packContract.methods.holderTokenIds(account).call();
-      let _packs = [];
-      for(let i=0 ; i<uris.length ; i++) {
-        const res = await axios.get(uris[i]);
-        _packs.push({id: ids[i], ...res.data});
-      }
+      try {
+        const uris = await packContract.methods.holderTokenUris(account).call();
+        const ids = await packContract.methods.holderTokenIds(account).call();
+        let _packs = [];
+        for(let i=0 ; i<uris.length ; i++) {
+            const res = await axios.get(uris[i]);
 
-      _packs.length === 0 ? setAssetsState(2) : setAssetsState(1);
-      setPacks(_packs);
+            _packs.push({id: ids[i], ...res.data});
+          
+        }
+
+        _packs.length === 0 ? setAssetsState(2) : setAssetsState(1);
+        setPacks(_packs);
+      }catch {
+        return setAssetsState(2)
+      }
+    }else {
+      setAssetsState(2)
     }
   }
 
@@ -36,9 +47,9 @@ function MyPacks(props) {
     switch (assetsState) {
       case 0:
         return (
-          <ul className="list-unstyled mb-0 tabItemList">
-            <EmptyBalance title={"Don’t have any packs? Visit the Mint page to get some!"} link={"/mint"} buttonTitle={"Mint Packs"}/>
-          </ul>
+            <Paragraph style={{ marginTop: 30 }} graph="image" rows={3}>
+              <Loader center content="Loading..." />
+            </Paragraph>
         )    
       case 1:
         return (
