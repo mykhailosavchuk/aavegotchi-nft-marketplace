@@ -2297,24 +2297,10 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable 
 }
 
 
-// CryptoBoys smart contract inherits ERC721 interface
-interface IGotchi is IERC721 {
 
-  
-  // mint a new crypto boy
-  function mint(address to, string memory _tokenURI, string memory type_) external;
 
-  function getItemsByType(string memory type_) external view returns(string[] memory, uint256[] memory);
-
-  // check if the token already exists
-  function tokenExists(uint256 _tokenId) external view returns(bool);
-
-  function newId() external view returns(uint256) ;
-
-}
-
-// CryptoBoys smart contract inherits ERC721 interface
-contract Gotchi is ERC721, IGotchi, Ownable {
+// Gotchi smart contract inherits ERC721 interface
+contract Gotchi is ERC721, Ownable {
 
     //using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -2332,23 +2318,28 @@ contract Gotchi is ERC721, IGotchi, Ownable {
     
     // initialize contract while deployment with contract's collection name and token
     constructor() ERC721("Ghost Hero Item", "GHitem") {
-        _setBaseURI("https://ipfs.infura.io/ipfs/");
+        _setBaseURI("https://gateway.moralisipfs.com/ipfs/");
     }
 
+    function setBaseURI(string memory _uri) external onlyOwner {
+      _setBaseURI(_uri);
+    }
+    
+    // set Pack contract address, only pack contract can mint gotchi token.
     function setPackAddress(address _packAddr) external onlyOwner {
         packAddress = _packAddr;
     }
 
     /**
-     * @dev Throws if called by any account other than the owner.
+     * @dev Throws if called by any account other than the pack contract.
      */
     modifier onlyPack() {
-        require(packAddress == _msgSender(), "Ownable: caller is not the owner");
+        require(packAddress == _msgSender(), "Ownable: caller is not the pack");
         _;
     }
 
-    // mint a new crypto boy
-    function mint(address to, string memory _tokenURI, string memory type_) external override onlyPack {
+    // mint a new Gotchi
+    function mint(address to, string memory _tokenURI, string memory type_) external onlyPack {
         // check if thic fucntion caller is not an zero address account
         require(msg.sender != address(0), "Invalid account");
         
@@ -2357,6 +2348,7 @@ contract Gotchi is ERC721, IGotchi, Ownable {
         // mint the token
         _mint(to, tokenId);
 
+        // check if inputed type already exists.
         if(!typeExists[type_]) {
             typeExists[type_] = true;
             types.push(type_);
@@ -2365,7 +2357,7 @@ contract Gotchi is ERC721, IGotchi, Ownable {
         // set token URI (bind token id with the passed in token URI)
         _setTokenURI(tokenId, _tokenURI);
 
-
+        // add new token id to specified type.
         _tokenIdsByType[type_].add(tokenId);
         
         // increment counter
@@ -2373,11 +2365,13 @@ contract Gotchi is ERC721, IGotchi, Ownable {
     
     }
 
+    // burn token id
     function burn(uint256 id_) external {
         _burn(id_);
     }
 
-    function getItemsByType(string memory type_) public view override returns(string[] memory, uint256[] memory) {
+    // return all items of specified type.
+    function getItemsByType(string memory type_) public view returns(string[] memory, uint256[] memory) {
 
         uint256 tokenCount = _tokenIdsByType[type_].length();
         string[] memory uris = new string[](tokenCount);
@@ -2392,14 +2386,16 @@ contract Gotchi is ERC721, IGotchi, Ownable {
     }
 
     // check if the token already exists
-    function tokenExists(uint256 _tokenId) public view override returns(bool) {
+    function tokenExists(uint256 _tokenId) public view returns(bool) {
         return _exists(_tokenId);
     }
 
-    function newId() external view override returns(uint256) {
+    // return next token id
+    function newId() external view returns(uint256) {
         return _tokenIds.current();
     }
 
+    // return token uris of spectified token ids
     function tokenURIs(uint256[] memory _ids) external view returns(string[] memory) {
         string[] memory _uris = new string[](_ids.length);
 
@@ -2410,6 +2406,203 @@ contract Gotchi is ERC721, IGotchi, Ownable {
         return _uris;
     }
 
+    // return token ids of account
+    function holderTokenIds(address account) public view returns(uint256[] memory) {
+        
+        uint256 count = balanceOf(account);
+        uint256[] memory ids_ = new uint256[](count);
+
+        for(uint256 i=0 ; i<count ; i++) {
+            ids_[i] = tokenOfOwnerByIndex(account, i);
+        }
+
+        return ids_;
+    }
+
+    // return token uris of account
+    function holderTokenUris(address account) public view returns(string[] memory) {
+        
+        uint256 count = balanceOf(account);
+        uint256[] memory ids_ = holderTokenIds(account);
+        string[] memory uris_ = new string[](count);
+
+        for(uint256 i=0 ; i<count ; i++) {
+            uris_[i] = tokenURI(ids_[i]);
+        }
+
+        return uris_;
+    }
+}
+
+
+// Pack smart contract inherits ERC721 interface
+contract Pack is ERC721, Ownable {
+
+    using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.UintSet;
+    using Counters for Counters.Counter;
+
+    Counters.Counter private _packIds;
+
+    mapping(address => bool) public isStarted;
+    
+    Gotchi public gotchi;
+    IERC20 public ghstToken;
+
+    uint256 public packPrice;
+    uint256 public sterPackPrice;
+    EnumerableSet.AddressSet private _admins;
+
+    mapping(uint256 => EnumerableSet.UintSet) private _tokenIdsByPack;
+
+    // initialize contract while deployment with contract's collection name and token
+    constructor(
+        address gotchi_,
+        IERC20 ghst_,
+        address[] memory admins_
+        ) ERC721("GOTCHI HEROES PACK", "GHP") {
+        gotchi = Gotchi(gotchi_);
+        _setBaseURI("https://gateway.moralisipfs.com/ipfs/");
+
+        setPackPrice(5*(10**18), 15*(10**18));
+        ghstToken = ghst_;
+
+        for(uint i=0 ; i<admins_.length ; i++) {
+            _admins.add(admins_[i]);
+        }
+    }
+
+    // set token's base uri
+    function setBaseURI(string memory _uri) external onlyOwner {
+        _setBaseURI(_uri);
+    }
+
+    // set that token is started by buying starter pack.
+    function setStart(address account) public {
+        isStarted[account] = true;
+    }
+
+    // set pack prices(starter pack and common pack) of ghst coin.
+    function setPackPrice(uint256 _packPrice, uint256 _sterPackPack) public {
+        packPrice = _packPrice;
+        sterPackPrice = _sterPackPack;
+    }
+
+    // mint a new pack
+    function mint(string memory tokenURI_, string[] memory itemUris_, string[] memory itemTypes_) external {
+        // check if thic fucntion caller is not an zero address account
+        require(msg.sender != address(0));
+
+        uint256 price = packPrice;
+        if(itemTypes_.length > 5) {
+            require(!isStarted[msg.sender], "User can mint only one starter pack.");
+            isStarted[msg.sender] = true;
+            price = sterPackPrice;
+        }
+    
+        uint256 tokenId = _packIds.current();
+        
+        uint256 adminReward = price / _admins.length();
+        for(uint i=0 ; i<_admins.length(); i++) {
+            ghstToken.transferFrom(msg.sender, _admins.at(i), adminReward);
+        }
+        // mint the token
+        _mint(msg.sender, tokenId);
+
+        // set token URI (bind token id with the passed in token URI)
+        _setTokenURI(tokenId, tokenURI_);
+
+        for(uint i=0 ; i<itemUris_.length ; i++) {
+            gotchi.mint(address(this), itemUris_[i], itemTypes_[i]);
+            uint256 gotchiId = gotchi.newId();
+            _tokenIdsByPack[tokenId].add(gotchiId - 1);
+        }
+        _packIds.increment();
+    }
+
+    // mint multiple tokens at one time.
+    function mintBatch(string[] memory tokenURIs_, string[] memory itemUris_, string[] memory itemTypes_) external {
+        // check if thic fucntion caller is not an zero address account
+        require(msg.sender != address(0));
+        require(tokenURIs_.length % 5 == 0, "A pack should include 5 items");
+
+        for(uint pId=0 ; pId<tokenURIs_.length ; pId++){
+        
+            uint256 tokenId = _packIds.current();
+
+            uint256 adminReward = packPrice / _admins.length();
+            for(uint i=0 ; i<_admins.length(); i++) {
+                ghstToken.transferFrom(msg.sender, _admins.at(i), adminReward);
+            }
+            // mint the token
+            _mint(msg.sender, tokenId);
+
+            // set token URI (bind token id with the passed in token URI)
+            _setTokenURI(tokenId, tokenURIs_[pId]);
+
+            for(uint i=0 ; i<5 ; i++) {
+                gotchi.mint(address(this), itemUris_[pId*5 + i], itemTypes_[pId*5 + i]);
+                uint256 gotchiId = gotchi.newId();
+                _tokenIdsByPack[tokenId].add(gotchiId - 1);
+            }
+            _packIds.increment();
+        }
+    }
+
+    // burn pack and then transfer gochi tokens to pack's owner.
+    function openPack(uint256 packId_) external {
+        require(ownerOf(packId_) == msg.sender, "This pack is no yours");
+        uint256[] memory tokenIds = getIdsByPack(packId_);
+
+        for(uint i=0 ; i<tokenIds.length ; i++) {
+            gotchi.approve(msg.sender, tokenIds[i]);
+            gotchi.transferFrom(address(this), msg.sender, tokenIds[i]);
+        }
+        delete _tokenIdsByPack[packId_];
+        
+        _burn(packId_);
+
+    }
+
+    // burn a pack
+    function burn(uint256 id_) external {
+
+        delete _tokenIdsByPack[id_];
+        _burn(id_);
+    }
+
+    function getIdsByPack(uint256 id_) public view returns(uint256[] memory) {
+
+        uint256 tokenCount = _tokenIdsByPack[id_].length();
+        uint256[] memory ids = new uint256[](tokenCount);
+
+        for(uint256 i=0 ; i<tokenCount ; i++) {
+            ids[i] = _tokenIdsByPack[id_].at(i);
+        }
+
+        return ids;
+    }
+
+    // check if the token already exists
+    function packExists(uint256 id_) public view returns(bool) {
+        return _exists(id_);
+    }
+
+    function newId() public view returns(uint256) {
+        return _packIds.current();
+    }
+
+    // return next token id
+    function tokenURIs(uint256[] memory _ids) external view returns(string[] memory) {
+        string[] memory _uris = new string[](_ids.length);
+
+        for(uint256 i=0 ; i<_ids.length ; i++) {
+            _uris[i] = tokenURI(_ids[i]);
+        }
+
+        return _uris;
+    }
+    
     function holderTokenIds(address account) public view returns(uint256[] memory) {
         
         uint256 count = balanceOf(account);
@@ -2434,203 +2627,10 @@ contract Gotchi is ERC721, IGotchi, Ownable {
 
         return uris_;
     }
-}
-
-// CryptoBoys smart contract inherits ERC721 interface
-interface IPack is IERC721 {
-
-  
-  // mint a new crypto boy
-  function mint(string memory tokenURI_, string[] memory itemUris_, string[] memory itemTypes_) external;
-  function mintBatch(string[] memory tokenURIs_, string[] memory itemUris_, string[] memory itemTypes_) external;
-
-  function getIdsByPack(uint256 id_) external view returns(uint256[] memory);
-
-  // check if the token already exists
-  function packExists(uint256 _tokenId) external view returns(bool);
-
-  function newId() external view returns(uint256);
 
 }
 
-// CryptoBoys smart contract inherits ERC721 interface
-contract Pack is ERC721, IPack, Ownable {
-
-  using EnumerableSet for EnumerableSet.AddressSet;
-  using EnumerableSet for EnumerableSet.UintSet;
-  using Counters for Counters.Counter;
-
-  Counters.Counter private _packIds;
-
-  mapping(address => bool) isStarted;
-  
-  IGotchi public gotchi;
-  IERC20 public ghstToken;
-
-  uint256 public mintPrice;
-  EnumerableSet.AddressSet private _admins;
-
-  mapping(uint256 => EnumerableSet.UintSet) private _tokenIdsByPack;
-
-  // initialize contract while deployment with contract's collection name and token
-  constructor(
-      address gotchi_,
-      IERC20 ghst_,
-      address[] memory admins_
-      ) ERC721("GOTCHI HEROES PACK", "GHP") {
-    gotchi = IGotchi(gotchi_);
-    _setBaseURI("https://ipfs.infura.io/ipfs/");
-
-    mintPrice = 5**18;
-    ghstToken = ghst_;
-
-    for(uint i=0 ; i<admins_.length ; i++) {
-        _admins.add(admins_[i]);
-    }
-  }
-
-  function setStart(address account) public {
-      isStarted[account] = true;
-  }
-
-  // mint a new pack
-  function mint(string memory tokenURI_, string[] memory itemUris_, string[] memory itemTypes_) external override {
-    // check if thic fucntion caller is not an zero address account
-    require(msg.sender != address(0));
-
-    if(itemTypes_.length > 5) {
-        require(!isStarted[msg.sender], "User can mint only one starter pack.");
-        isStarted[msg.sender] = true;
-    }
-  
-    uint256 tokenId = _packIds.current();
-    
-    uint256 adminReward = mintPrice / _admins.length();
-    for(uint i=0 ; i<_admins.length(); i++) {
-        ghstToken.transferFrom(msg.sender, _admins.at(i), adminReward);
-    }
-    // mint the token
-    _mint(msg.sender, tokenId);
-
-    // set token URI (bind token id with the passed in token URI)
-    _setTokenURI(tokenId, tokenURI_);
-
-    for(uint i=0 ; i<itemUris_.length ; i++) {
-        gotchi.mint(address(this), itemUris_[i], itemTypes_[i]);
-        uint256 gotchiId = gotchi.newId();
-        _tokenIdsByPack[tokenId].add(gotchiId - 1);
-    }
-    _packIds.increment();
-  }
-
-  function mintBatch(string[] memory tokenURIs_, string[] memory itemUris_, string[] memory itemTypes_) external override {
-    // check if thic fucntion caller is not an zero address account
-    require(msg.sender != address(0));
-    require(tokenURIs_.length % 5 == 0, "A pack should include 5 items");
-
-    for(uint pId=0 ; pId<tokenURIs_.length ; pId++){
-    
-        uint256 tokenId = _packIds.current();
-
-        uint256 adminReward = mintPrice / _admins.length();
-        for(uint i=0 ; i<_admins.length(); i++) {
-            ghstToken.transferFrom(msg.sender, _admins.at(i), adminReward);
-        }
-        // mint the token
-        _mint(msg.sender, tokenId);
-
-        // set token URI (bind token id with the passed in token URI)
-        _setTokenURI(tokenId, tokenURIs_[pId]);
-
-        for(uint i=0 ; i<5 ; i++) {
-            gotchi.mint(address(this), itemUris_[pId*5 + i], itemTypes_[pId*5 + i]);
-            uint256 gotchiId = gotchi.newId();
-            _tokenIdsByPack[tokenId].add(gotchiId - 1);
-        }
-        _packIds.increment();
-    }
-  }
-
-  function openPack(uint256 packId_) external {
-    require(ownerOf(packId_) == msg.sender, "This pack is no yours");
-    uint256[] memory tokenIds = getIdsByPack(packId_);
-
-    for(uint i=0 ; i<tokenIds.length ; i++) {
-        gotchi.approve(msg.sender, tokenIds[i]);
-        gotchi.transferFrom(address(this), msg.sender, tokenIds[i]);
-    }
-    delete _tokenIdsByPack[packId_];
-    
-    _burn(packId_);
-
-  }
-
-  // burn a pack
-  function burn(uint256 id_) external {
-
-    delete _tokenIdsByPack[id_];
-    _burn(id_);
-  }
-
-  function getIdsByPack(uint256 id_) public view override returns(uint256[] memory) {
-
-    uint256 tokenCount = _tokenIdsByPack[id_].length();
-    uint256[] memory ids = new uint256[](tokenCount);
-
-    for(uint256 i=0 ; i<tokenCount ; i++) {
-        ids[i] = _tokenIdsByPack[id_].at(i);
-    }
-
-    return ids;
-  }
-
-  // check if the token already exists
-  function packExists(uint256 id_) public view override returns(bool) {
-    return _exists(id_);
-  }
-
-  function newId() public view override returns(uint256) {
-    return _packIds.current();
-  }
-
-  function tokenURIs(uint256[] memory _ids) external view returns(string[] memory) {
-    string[] memory _uris = new string[](_ids.length);
-
-    for(uint256 i=0 ; i<_ids.length ; i++) {
-        _uris[i] = tokenURI(_ids[i]);
-    }
-
-    return _uris;
-  }
-   
-   function holderTokenIds(address account) public view returns(uint256[] memory) {
-    
-    uint256 count = balanceOf(account);
-    uint256[] memory ids_ = new uint256[](count);
-
-    for(uint256 i=0 ; i<count ; i++) {
-        ids_[i] = tokenOfOwnerByIndex(account, i);
-    }
-
-    return ids_;
-  }
-
-  function holderTokenUris(address account) public view returns(string[] memory) {
-    
-    uint256 count = balanceOf(account);
-    uint256[] memory ids_ = holderTokenIds(account);
-    string[] memory uris_ = new string[](count);
-
-    for(uint256 i=0 ; i<count ; i++) {
-        uris_[i] = tokenURI(ids_[i]);
-    }
-
-    return uris_;
-  }
-
-}
-
-// CryptoBoys smart contract inherits ERC721 interface
+// Marketplace smart contract inherits ERC721 interface
 contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
 
     using Counters for Counters.Counter;
@@ -2738,8 +2738,8 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         bool withBNB
     );
   
-    constructor(address _gotchiAddr, address _packAddr, address token_, address[] memory admins_, address[] memory devs_) {
-        _ghero = IERC20(token_);
+    constructor(address _gotchiAddr, address _packAddr, address ghero_, address[] memory admins_, address[] memory devs_) {
+        _ghero = IERC20(ghero_);
         addCollection("Gotchi Collection", _gotchiAddr, 500);
         addCollection("Pack Collection", _packAddr, 500);
 
@@ -2779,7 +2779,9 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
     /**
      * @notice Create item order
      * @param _collection: contract address of the NFT
-     * @param _itemPrice: price for listing (in wei)
+     * @param _tokenId: token Id for sell
+     * @param _itemPrice: token price price for sell
+     * @param _type: token type
      */
     function createItemOrder(
         address _collection,
@@ -2787,7 +2789,6 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         uint256 _itemPrice,
         string memory _type
     ) external nonReentrant {
-        // Verify price is not too low/high
 
         // Transfer NFT to this contract
         IERC721(_collection).safeTransferFrom(
@@ -2819,10 +2820,11 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         // Emit event
         emit ItemNew(_collection, msg.sender, _tokenId, _itemPrice);
     }
-
+    
     /**
      * @notice Cancel existing item order
      * @param _collection: contract address of the NFT
+     * @param _type: type of the NFT
      * @param _tokenId: tokenId of the NFT
      */
     function cancelItemOrder(address _collection, string memory _type, uint256 _tokenId)
@@ -2875,10 +2877,9 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         uint256 _tokenId,
         uint256 _newPrice
     ) external nonReentrant {
-        require(IERC721(_collection).ownerOf(_tokenId) == msg.sender, "Token owner error.");
-
 
         Item storage selItem = _itemDetails[_collection][_tokenId];
+        require(selItem.seller == msg.sender, "Token owner error.");
         selItem.price = _newPrice;
         // Emit event
         emit ItemUpdate(_collection, msg.sender, _tokenId, _newPrice);
@@ -2886,6 +2887,7 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
 
     /**
      * @notice Add a new collection
+     * @param _name: collection name
      * @param _collection: collection address
      * @param _tradingFee: trading fee (100 = 1%, 500 = 5%, 5 = 0.05%)
      * @dev Callable by admin
@@ -2921,7 +2923,9 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
     
     /**
      * @notice Modify collection characteristics
+     * @param _id: collection id
      * @param _collection: collection address
+     * @param _name: collection name
      * @param _tradingFee: trading fee (100 = 1%, 500 = 5%, 5 = 0.05%)
      * @dev Callable by admin
      */
@@ -2958,6 +2962,7 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
      * @param _collection: contract address of the NFT
      * @param _tokenId: tokenId of the NFT purchased
      * @param _price: price (must be equal to the itemPrice set by the seller)
+     * @param _type: type
      */
     function buyToken(
         address _collection,
@@ -3104,6 +3109,11 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         return (statuses, itemInfo);
     }
 
+    /**
+    * @notice return order item detail
+    * @param _collection collection address
+    * @param _tokenId token id
+    */
     function viewItemByCollectionAndTokenId(
         address _collection,
         uint256 _tokenId
@@ -3181,11 +3191,7 @@ contract Marketplace is ReentrancyGuard, ERC721Holder, Ownable {
         return (tokenIds, tokenUris, itemInfo);
     }
 
-    /*
-     * @notice View addresses and details for all the collections available for trading
-     * @param cursor: cursor
-     * @param size: size of the response
-     */
+    // return all collections
     function viewCollections()
         external
         view

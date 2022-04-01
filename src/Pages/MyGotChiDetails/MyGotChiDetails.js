@@ -23,21 +23,24 @@ function MyGotChiDetails(props) {
   const [ recipient, setRecipient ] = useState("");
   const navigate = useNavigate();
 
-  useEffect(async () => {
+  useEffect(() => {
 
-    if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
-      const uri = await gotchiContract.methods.tokenURI(params.id).call();
-      
-      axios.get(uri).then(res => {
-        setGotchi(res.data);
-      })
-
-      const addr = await gotchiContract.methods.getApproved(params.id).call();
-      if(addr === marketPlaceAddress) {
-        setIsApproved(true);
+    (async () => {
+      if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
+        const uri = await gotchiContract.methods.tokenURI(params.id).call();
+        
+        axios.get(uri).then(res => {
+          setGotchi(res.data);
+        })
+  
+        const addr = await gotchiContract.methods.getApproved(params.id).call();
+        if(addr === marketPlaceAddress) {
+          setIsApproved(true);
+        }
       }
-    }
+    })()
     
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gotchiContract]);
 
   const approveHandler = async () => {
@@ -137,16 +140,34 @@ function MyGotChiDetails(props) {
                     }
                     {
                       ! isApproved && 
-                      <li >
+                      <li className="text-center">
                         <button
                           className="btn_toggle btn text-white m-2"
-                          style={{ fontSize: "20px", width: "100%" }}
+                          style={{ fontSize: "20px", width: "200px" }}
                           onClick={approveHandler}
                         >
                           Approve
                         </button>
                       </li>
                     }
+                    <li className="text-center">
+                    <button
+                      className={classNames("btn text-white m-2", { "btn_toggle": isApproved })}
+                      style={{ fontSize: "20px", width: "200px" }}
+                      disabled={!isApproved}
+                      onClick={() => setTransferModal(true)}
+                    >
+                      Transfer
+                    </button>
+                    <button
+                      className={classNames("btn text-white m-2", { "btn_toggle": isApproved })}
+                      style={{ fontSize: "20px", width: "200px" }}
+                      disabled={!isApproved}
+                      onClick={() => setSellModal(true)}
+                    >
+                      Sell
+                    </button>
+                    </li>
                     
                   </ul>
                 </div>
@@ -154,22 +175,7 @@ function MyGotChiDetails(props) {
             </div>
           </div>
         </div>
-        <button
-          className={classNames("btn text-white m-2", { "btn_toggle": isApproved })}
-          style={{ fontSize: "20px", width: "200px" }}
-          disabled={!isApproved}
-          onClick={() => setTransferModal(true)}
-        >
-          Transfer
-        </button>
-        <button
-          className={classNames("btn text-white m-2", { "btn_toggle": isApproved })}
-          style={{ fontSize: "20px", width: "200px" }}
-          disabled={!isApproved}
-          onClick={() => setSellModal(true)}
-        >
-          Sell
-        </button>
+        
       </div>
      
 

@@ -23,44 +23,42 @@ function MyGotChis() {
   const [ rarities, setRarities ] = useState([]);
   const [ crntType, setCrntType ] = useState();
   const [ qSortby, setSortQBy ] = useState(LOWEST);
-  const [ filterRBy, setFilterRBy ] = useState();
+  const [ filterRBy, setFilterRBy ] = useState("ALL");
   const [ assetsState, setAssetsState  ] = useState(0);
 
   useEffect(() => {
 
-    loadData();
-    
-  }, [gotchiContract, chainId, account]);
-
-  const loadData = async () => {
-    if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
-      try {
-        const uris = await gotchiContract.methods.holderTokenUris(account).call();
-        const ids = await gotchiContract.methods.holderTokenIds(account).call();
-        let _gotchis = [];
-        for(let i=0 ; i<uris.length ; i++) {
-          try {
-            const res = await axios.get(uris[i]);
-            let newGotchi = {...res.data, id: ids[i]};
-
-            _gotchis.push(newGotchi);
-          } catch {}
+    (async () => {
+      if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
+        try {
+          const uris = await gotchiContract.methods.holderTokenUris(account).call();
+          const ids = await gotchiContract.methods.holderTokenIds(account).call();
+          let _gotchis = [];
+          for(let i=0 ; i<uris.length ; i++) {
+            try {
+              const res = await axios.get(uris[i]);
+              let newGotchi = {...res.data, id: ids[i]};
+  
+              _gotchis.push(newGotchi);
+            } catch {}
+          }
+          _gotchis.length === 0 ? setAssetsState(2) : setAssetsState(1);
+          let _types = _gotchis.map(g => g.type).filter((t, idx, self) => self.indexOf(t) === idx);
+          let _rarities = _gotchis.map(g => g.tier).filter((t, idx, self) => self.indexOf(t) === idx);
+          setRarities(_rarities);
+          setTypes(_types);
+          setGotchis(_gotchis);
+          setCrntType(_types[0]);
+        }catch {
+          setAssetsState(2)
         }
-        _gotchis.length === 0 ? setAssetsState(2) : setAssetsState(1);
-        let _types = _gotchis.map(g => g.type).filter((t, idx, self) => self.indexOf(t) === idx);
-        let _rarities = _gotchis.map(g => g.tier).filter((t, idx, self) => self.indexOf(t) === idx);
-        setRarities(_rarities);
-        setTypes(_types);
-        setFilterRBy(_rarities[0])
-        setGotchis(_gotchis);
-        setCrntType(_types[0]);
-      }catch {
+      }else {
         setAssetsState(2)
       }
-    }else {
-      setAssetsState(2)
-    }
-  }
+    })()
+    
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gotchiContract, chainId, account]);
 
   const AssetsComponent = () => {
     switch (assetsState) {
@@ -143,7 +141,7 @@ function MyGotChis() {
   }
 
   useEffect(() => {
-    let result = gotchis.filter(g => crntType === "ALL" ? true : g.type === crntType).filter(g => filterRBy === "NONE" ? true : g.tier === filterRBy).sort((frt, sec) => qSortby === HIGHEST ? sec.quality - frt.quality : frt.quality - sec.quality);
+    let result = gotchis.filter(g => crntType === "ALL" ? true : g.type === crntType).filter(g => filterRBy === "ALL" ? true : g.tier === filterRBy).sort((frt, sec) => qSortby === HIGHEST ? sec.quality - frt.quality : frt.quality - sec.quality);
     setFilteredGotchis(result);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ crntType, qSortby, filterRBy ])
@@ -210,8 +208,8 @@ function MyGotChis() {
                     </li>
                   )
                 }
-                <li className="w-100 py-1" onClick={() => setFilterRBy("NONE")}>
-                  NONE
+                <li className="w-100 py-1" onClick={() => setFilterRBy("ALL")}>
+                ALL
                 </li>
 
               </ul>

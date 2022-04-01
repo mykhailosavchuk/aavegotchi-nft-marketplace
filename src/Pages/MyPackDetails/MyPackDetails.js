@@ -4,9 +4,7 @@ import { useSelector, useDispatch } from "react-redux"
 import axios from "axios";
 import { Modal } from "rsuite";
 import { useMoralis } from "react-moralis"
-import tokenLogo from "../../Static/img/logo.png"
-import { decimals, marketPlaceAddress, packAddress, packType } from "../../config/constances";
-import { formatPrice } from "../../utils/formatHelpers";
+import { decimals, marketPlaceAddress, packAddress, packType, secondKeys } from "../../config/constances";
 import { hostingLink } from "../../config/constances";
 import { setLoadingAction, setLoadingLabelAction } from "../../store/actions/GlobalActions";
 import Loading from "../../Components/Loading";
@@ -27,12 +25,33 @@ function MyPackDetails() {
   const [ recipient, setRecipient ] = useState();
   const [ gotchis, setGotchis ] = useState([]);
   const [ isOpened, setIsOpened ] = useState(false);
+  const [ activedIds, setActivedIds ] = useState([]);
+
+  function flip(event){
+    console.log(event)
+    var element = event.currentTarget;
+    if (element.className === "flip-card-inner") {
+      if(element.style.transform === "rotateY(180deg)") {
+        element.style.transform = "rotateY(0deg)";
+      }
+      else {
+        element.style.transform = "rotateY(180deg)";
+      }
+    }
+  };
+
   const dispatch = useDispatch();
 
-  useEffect(async () => {
+  useEffect(() => {
 
     if(typeof packContract !== "undefined" && packContract !== null) {
-      const uri = await packContract.methods.tokenURI(params.id).call();
+      loadData()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [packContract]);
+
+  const loadData = async () => {
+    const uri = await packContract.methods.tokenURI(params.id).call();
       const info = await marketContract.methods.viewItemByCollectionAndTokenId(packAddress, params.id).call();
       
       axios.get(uri).then(res => {
@@ -42,8 +61,7 @@ function MyPackDetails() {
           price: info[1].price
         });
       })
-    }
-  }, [packContract]);
+  }
  
   const openPackHandler = async () => {
     dispatch(setLoadingLabelAction("Opening Pack"))
@@ -90,7 +108,6 @@ function MyPackDetails() {
     navigate(`/item-list/${packType}`)
   }
 
-
   if(!pack) {
     return <Loading/>
   }
@@ -107,66 +124,78 @@ function MyPackDetails() {
               isOpened ?
               (
                 <ul className="list-unstyled mb-0 tabItemList">
-          {
-            gotchis
-            .map((v, idx) => {
-              return (
-                <li key={idx}>
+                  {
+                    gotchis
+                    .map((v, idx) => {
+                      return (
+                        <li key={idx} className="flip-card" >
 
-                  <Link className="d-block tabContentLink" to={`/my-gotchi-details/${v.id}`}>
-                    <div className="row">
-                      <div className="col-xl-3 col-lg-4 col-md-4 col-sm-4 col-12">
-                        <img style={{maxHeight: '180px'}} className="d-block mx-auto img-fluid"
-                          src={
-                            `${hostingLink}${v.spriteIMG}`
-                          }
-                          alt="img"
-                        />
-                      </div>
+                          <div className={`flip-card-inner`} onMouseOver={e => {
+                            if(!activedIds.includes(idx)) {
+                              setActivedIds([...activedIds, idx])
+                              flip(e);
+                            }
+                          }}>
 
-                      <div className="col-xl-9 col-lg-8 col-md-8 col-sm-8 col-12">
-                        <div className="col_wrapper">
-                          <div className="col_header">
-                            <div className="d-flex align-items-center justify-content-between">
-                              <h3 className="mb-0 text-uppercase">
-                                {v.name}
-                              </h3>
+                            <Link className={`flip-card-back d-block tabContentLink`} to={`/my-gotchi-details/${v.id}`}>
+                              <div className="row">
+                                <div className="col-xl-3 col-lg-4 col-md-4 col-sm-4 col-12">
+                                  <img style={{maxHeight: '180px'}} className="d-block mx-auto img-fluid"
+                                    src={
+                                      `${hostingLink}${v.spriteIMG}`
+                                    }
+                                    alt="img"
+                                  />
+                                </div>
 
-                              <span>
-                                <img
-                                  className="me-2"
-                                  style={{
-                                    width: "60px",
-                                  }}
-                                  src={"./logo.png"}
-                                  alt=""
-                                />
-                                1
-                              </span>
+                                <div className="col-xl-9 col-lg-8 col-md-8 col-sm-8 col-12">
+                                  <div className="col_wrapper">
+                                    <div className="col_header">
+                                      <div className="d-flex align-items-center justify-content-between">
+                                        <h3 className="mb-0 text-uppercase">
+                                          {v.name}
+                                        </h3>
+
+                                      </div>
+                                    </div>
+                                    <div className="col_body" >
+                                      <ul className="list-unstyled">
+                                      <li className="font-weight-bold">
+                                          Type: {v.type}
+                                      </li>
+                                      <li className="font-weight-bold">
+                                          Tier: {v.tier}
+                                      </li>
+                                      <li className="font-weight-bold">
+                                          Token ID: #{v.id}
+                                      </li>
+                                      <li className="font-weight-bold">
+                                          Quality: {Number.parseFloat(v.quality).toFixed(2)}%
+                                      </li>
+                                      {
+                                        v?.perks &&
+                                        Object.keys(v?.perks)?.map((key, idx) => (
+                                          <li key={idx} className={"text-capitalize font-weight-bold"}>
+                                            { key.split(/(?=[A-Z])/).join(" ") } : { key.toLowerCase() === "damage" ? v?.perks[key] : secondKeys.includes(key.toLowerCase()) ? `${v?.perks[key]} Seconds` : `${v?.perks[key]*100}%` }
+                                        </li>
+                                        ))
+                                      }
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </Link>
+
+                            <div className={`flip-card-front`}>
+                              <h1>{`Ghost Hero Item ${idx + 1}`}</h1> 
                             </div>
                           </div>
-                          <div className="col_body" >
-                            <ul className="list-unstyled">
-                              <li className="font-weight-bold">
-                                  Type: {v.type}
-                              </li>
-                              <li className="font-weight-bold">
-                                  Tier: {v.tier}
-                              </li>
-                              <li className="font-weight-bold">
-                                  ID: #{v.id}
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
 
-                </li>
-              );
-            })}
-          </ul>
+                        </li>
+                      );
+                    })}
+                </ul>
               ):
               (
                 <>
@@ -188,19 +217,18 @@ function MyPackDetails() {
                           className="back_btn"
                         >{`<< Back`}</Link>
                           <h3 className="mb-0">
-                            { "GOTCHI HEROES PACK" }
+                            { pack.name }
                           </h3>
-      
                          
                         </div>
                       </div>
                       <div className="col_body" >
                         <ul className="list-unstyled">
                           <li className="font-weight-bold">
-                              ID: #{ pack?.id }
+                              TOKEN ID: #{ pack?.id }
                           </li>
                           <li className="font-weight-bold">
-                              Description: { "Each Gotchi Heroes Pack contains 5 items randomly selected from the Gotchi Heroes item pool. Each pack is guaranteed to contain at least one item that is Rare or better." }
+                              Description: { pack.description }
                           </li>
       
                         </ul>
@@ -208,56 +236,53 @@ function MyPackDetails() {
                        
                         <button
                           className="btn_toggle btn text-white m-2"
-                          style={{ fontSize: "20px", width: "100%" }}
+                          style={{ fontSize: "20px", width: "250px" }}
                           onClick={() => openPackHandler()}
                         >
                           Open Pack
                         </button>
-                        <button
-                          className="btn_toggle btn text-white m-2"
-                          style={{ fontSize: "20px", width: "100%" }}
-                          onClick={() => approveHandler()}
-                        >
-                          Approve
-                        </button>
-                        <button
-                          className="btn_toggle btn text-white m-2"
-                          style={{ fontSize: "20px", width: "250px" }}
-                          onClick={() => {
-                            setTransferModal(true)
-                          }}
-                          disabled={!isApproved}
-                        >
-                          Transfer Pack
-                        </button>
-                        <button
-                          className="btn_toggle btn text-white m-2"
-                          style={{ fontSize: "20px", width: "250px" }}
-                          onClick={() => {
-                            setSellModal(true);
-                          }}
-                          disabled={!isApproved}
-                        >
-                          Sell Pack
-                        </button>
+                        
                       </div>
                     </div>
                   </div>
                 </>
               )
             }
-
+           
+           <div className="text-center mt-4">
+              <button
+                className="btn_toggle btn text-white m-2"
+                style={{ fontSize: "20px", width: "250px" }}
+                onClick={() => approveHandler()}
+              >
+                Approve
+              </button>
+              <button
+                className="btn_toggle btn text-white m-2"
+                style={{ fontSize: "20px", width: "250px" }}
+                onClick={() => {
+                  setTransferModal(true)
+                }}
+                disabled={!isApproved}
+              >
+                Transfer Pack
+              </button>
+              <button
+                className="btn_toggle btn text-white m-2"
+                style={{ fontSize: "20px", width: "250px" }}
+                onClick={() => {
+                  setSellModal(true);
+                }}
+                disabled={!isApproved}
+              >
+                Sell Pack
+              </button>
+           </div>
            
           </div>
         </div>
-        
-
-
-
 
       </div>
-
-
 
       <Modal open={transferModal} onClose={() => setTransferModal(false)}  style={{marginTop: "100px"}}>
         <Modal.Body>
@@ -310,7 +335,5 @@ function MyPackDetails() {
     </div>
   );
 }
-
-
 
 export default MyPackDetails;

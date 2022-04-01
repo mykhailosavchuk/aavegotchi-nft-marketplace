@@ -26,6 +26,7 @@ function MyItems() {
 
   useEffect(() => {
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gotchiContract, chainId, account]);
 
   const loadData = async () => {
@@ -71,16 +72,12 @@ function MyItems() {
         }
         setPacks(_packs)
       }catch {
-        setAssetsState(2)
+      setAssetsState(2)
       }
     }else {
       setAssetsState(2)
     }
   }
-
-  useEffect(() => {
-    packs?.length === 0 ? setAssetsState(2) : setAssetsState(1);
-  }, [selectedCategory, packs])
 
   useEffect(() => {
     let result = gotchis.filter(g => crntType === "ALL" ? true : g.type === crntType)
@@ -206,10 +203,10 @@ function MyItems() {
                               <div className="col_body" >
                                 <ul className="list-unstyled">
                                   <li className="font-weight-bold">
-                                      Name: {"GOTCHI HEROES PACK"}
+                                      Name: {v.name}
                                   </li>
                                   <li className="font-weight-bold">
-                                      Description: { "Each Gotchi Heroes Pack contains 5 items randomly selected from the Gotchi Heroes item pool. Each pack is guaranteed to contain at least one item that is Rare or better." }
+                                      Description: { v.description }
                                   </li>
                                 
                                 </ul>

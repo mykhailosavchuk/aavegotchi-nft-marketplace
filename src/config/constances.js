@@ -13,17 +13,19 @@ export const testTokenAddress = "0x27f95558888D6DAa1f8c303c4709E01ee49Acb33";
 
 export const testGhstAddress = "0xcDd90D373bcb41765bF33381173b41A1D9588A7F";
 
-export const gotchiAddress = "0x3e339D90067f9363B0D763BFd33A51206ed956B3";
+export const gotchiAddress = "0x6ad360FD9fe147383850117678f3C2728fb71796";
 
-export const packAddress = "0xfF91E8714DfCb472e86373c86F163E1aFbDaAF59";
+export const packAddress = "0xd75639c99fbBfF602c6CF44F2B533BED8036a834";
 
-export const marketPlaceAddress = "0xbA4ca935d013AF2302b55Bcf1F999924194459f0";
+export const marketPlaceAddress = "0x8Ef453e5145Cc11aD8042Ee3E396c54516B13911";
 
 export const hostingLink = "https://gotchiheroes.com";
 
-export const ipfsLink = "https://ipfs.infura.io/ipfs/";
+export const ipfsLink = "https://gateway.moralisipfs.com/ipfs/";
 
-export const defaultPackId = "QmQPNUvuc63GYZusaM6p9FwpBUVwD4BVTFipswtv6eN1Ei";
+export const defaultPackId = "QmSoKhJvwxikaZqohHz2LtEPkpaFss8ZER22LPz1XBmnZs";
+
+export const starterPackId = "QmNp8AkpeDDqFMqnuTCYE3efRcRm7NRnrG3x4P6m65rpZP";
 
 export const packType = "type-pack";
 
@@ -32,5 +34,9 @@ export const secondKeys = ["bosstime", "skillextend"];
 export const LOWEST_PRICE = "Lowest Price";
 
 export const HIGHEST_PRICE = "Highest Price";
+
+export const LATEST = "Latest";
+
+export const OLDEST = "Oldest";
 
 

@@ -52,7 +52,7 @@
   --col-purple-260: #8f17f9;
   --col-purple-270: #7e18f8;
   --col-purple-280: #730cee;
-  --col-purple-300: #7217f4;
+  --col-purple-300: green;
   --col-purple-320: #7217f4;
   --col-purple-350: #7100eb;
   --col-purple-400: #722cf0;
@@ -128,13 +128,29 @@ html {
 }
 
 body {
-  color: var(--col-text) !important;
+  /* color: var(--col-text) !important;
   background: var(--theme-body-bg);
   background-attachment: fixed !important;
   background-image: url("./Static/img/ghostbg.svg"), none;
   background-position: 0 0;
   background-repeat: repeat;
   background-size: 300px;
+  margin: 0;
+  min-height: 100%;
+  min-width: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overflow: visible;
+  padding: 0;
+  width: 100%;
+  font-size: 16px !important; */
+  background-attachment: fixed !important;
+  background: url("./Static/img/body-bg.jpg");
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
   margin: 0;
   min-height: 100%;
   min-width: 100%;
@@ -205,12 +221,12 @@ h6, p {
 .btn_purple_with_border {
   background-color: var(--theme-button-purple);
   color: white;
-  border: 3px solid #000;
+  border: 3px solid white;
   font-size: 16px;
 }
 
 .border_all_box {
-  border: 3px solid #000;
+  border: 3px solid black;
   font-size: 20px;
 }
 
@@ -234,7 +250,7 @@ h6, p {
   background-blend-mode: overlay;
   /* background: #080315 !important; */
 
-  background: url("./Static/img/body-bg.jpg");
+  /* background: url("./Static/img/body-bg.jpg");
   background-position: 0 0;
   background-repeat: no-repeat;
   background-size: 100% 100%;
@@ -248,7 +264,7 @@ h6, p {
   overflow: visible;
   padding: 0;
   width: 100%;
-  font-size: 16px !important;
+  font-size: 16px !important; */
 }
 
 [data-theme="dark-theme"] * {
@@ -266,4 +282,42 @@ h6, p {
   background: #000;
   color: white;
 }
+
+.flip-card {
+  background-color: transparent;
+  height: 350px;
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 2s;
+  transform-style: preserve-3d;
+}
+
+
+.flip-card-front, .flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 80%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.flip-card-front {
+  background-color: #04b7bc;
+  color: black;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+
+.flip-card-back {
+  transform: rotateX(180deg);
+  transform: rotateY(180deg);
+}
+
 /*# sourceMappingURL=App.css.map */

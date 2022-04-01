@@ -20,20 +20,23 @@ function MyPackItemDetails() {
   const [ price, setPrice ] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(async () => {
+  useEffect(() => {
+    (async () => {
 
-    if(typeof packContract !== "undefined" && packContract !== null) {
-      const uri = await packContract.methods.tokenURI(params.id).call();
-      const info = await marketContract.methods.viewItemByCollectionAndTokenId(packAddress, params.id).call();
-      
-      axios.get(uri).then(res => {
-        setPack({
-          ...res.data,
-          id: params.id,
-          price: info[1].price
-        });
-      })
-    }
+      if(typeof packContract !== "undefined" && packContract !== null) {
+        const uri = await packContract.methods.tokenURI(params.id).call();
+        const info = await marketContract.methods.viewItemByCollectionAndTokenId(packAddress, params.id).call();
+        
+        axios.get(uri).then(res => {
+          setPack({
+            ...res.data,
+            id: params.id,
+            price: info[1].price
+          });
+        })
+      }
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [packContract]);
  
   const cancelOrderHandler = async () => {
@@ -98,32 +101,34 @@ function MyPackItemDetails() {
                 <div className="col_body" >
                   <ul className="list-unstyled">
                     <li className="font-weight-bold">
-                        ID: #{ pack?.id }
+                        TOKEN ID: #{ pack?.id }
                     </li>
                     <li className="font-weight-bold">
                         Description: { pack?.description }
                     </li>
-
+                    <li className="text-center m-4">
+                      <button
+                        className={"btn text-white m-2 btn_toggle"}
+                        style={{ fontSize: "20px", width: "200px" }}
+                        onClick={cancelOrderHandler}
+                      >
+                        Cancel Order
+                      </button>
+                      <button
+                        className={"btn text-white m-2 btn_toggle"}
+                        style={{ fontSize: "20px", width: "200px" }}
+                        onClick={() => setChangePriceModal(true)}
+                      >
+                        Change Price
+                      </button>
+                    </li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <button
-          className={"btn text-white m-2 btn_toggle"}
-          style={{ fontSize: "20px", width: "200px" }}
-          onClick={cancelOrderHandler}
-        >
-          Cancel Order
-        </button>
-        <button
-          className={"btn text-white m-2 btn_toggle"}
-          style={{ fontSize: "20px", width: "200px" }}
-          onClick={() => setChangePriceModal(true)}
-        >
-          Change Price
-        </button>
+        
       </div>
 
       <Modal open={changePriceModal} onClose={() => setChangePriceModal(false)}  style={{marginTop: "100px"}}>

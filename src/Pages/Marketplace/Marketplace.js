@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux"
-import { HIGHEST_PRICE, hostingLink, LOWEST_PRICE, packAddress, packType, secondKeys } from "../../config/constances";
+import { HIGHEST_PRICE, hostingLink, LATEST, LOWEST_PRICE, OLDEST, packAddress, packType, secondKeys } from "../../config/constances";
 import { Link, useParams } from 'react-router-dom';
 import axios from "axios";
 import { useMoralis } from "react-moralis"
@@ -22,6 +22,8 @@ function PortalClosed() {
   const [toggleDropdown, setToggleDropdown] = useState(false)
   const { account, chainId } = useMoralis();
   const [ sortBy, setSortBy ] = useState(LOWEST_PRICE)
+  const [ filterRBy, setFilterRBy ] = useState("ALL");
+  const [ rarities, setRarities ] = useState([]);
 
   useEffect(() => {
 
@@ -64,6 +66,7 @@ function PortalClosed() {
                 description: res.data.description,
                 owner: result[2][i].seller,
                 price: result[2][i].price,
+                createdAt: result[2][i].createdAt,
                 image: res.data.image,
               });
             }
@@ -79,13 +82,16 @@ function PortalClosed() {
                 sprite: res.data.sprite,
                 owner: result[2][i].seller,
                 price: result[2][i].price,
+                createdAt: result[2][i].createdAt,
                 image: `${hostingLink}${res.data.spriteIMG}`,
                 perks: res.data.perks
               });
             }
           }
           
-          setItems(_items);
+        let _rarities = _items.map(g => g.tier).filter((t, idx, self) => self.indexOf(t) === idx);
+        setItems(_items);
+        setRarities(_rarities);
         }catch {}
       }
 
@@ -98,16 +104,23 @@ function PortalClosed() {
     if(items.length > 0) {
       switch (sortBy) {
         case LOWEST_PRICE:
-          setFilteredItems(items.sort((frt, sec) => frt.price - sec.price))
+          setFilteredItems(items.filter(g => filterRBy === "ALL" ? true : g.tier === filterRBy).sort((frt, sec) => sec.price - frt.price))
           break;
         case HIGHEST_PRICE:
-          setFilteredItems(items.sort((frt, sec) => sec.price - frt.price))
+          setFilteredItems(items.filter(g => filterRBy === "ALL" ? true : g.tier === filterRBy).sort((frt, sec) => frt.price - sec.price))
+          break;
+        case LATEST:
+          setFilteredItems(items.filter(g => filterRBy === "ALL" ? true : g.tier === filterRBy).sort((frt, sec) => frt.createdAt - sec.createdAt))
+          break;
+        case OLDEST:
+          setFilteredItems(items.filter(g => filterRBy === "ALL" ? true : g.tier === filterRBy).sort((frt, sec) => sec.createdAt - frt.createdAt))
           break;
         default:
           break;
       }
     }
-  }, [sortBy, items])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, items, filterRBy])
   
   return (
     <div id="PortalClosed">
@@ -184,7 +197,35 @@ function PortalClosed() {
                     className="dropdown-toggle"
                     data-mdb-toggle="dropdown"
                   >
-                    Sort: { sortBy }
+                    Filter Rarity By: { filterRBy }
+                  </button>
+                  <ul
+                    className="dropdown-menu"
+                    aria-labelledby="dropdownMenuButton"
+                  >
+                    {
+                      rarities.map((r, idx) => (
+                        <li key={idx}>
+                          <Link className="dropdown-item" to="#" onClick={() => setFilterRBy(r)}>
+                            {r}
+                          </Link>
+                        </li>
+                      ))
+                    }
+                    <li>
+                      <Link className="dropdown-item" to="#" onClick={() => setFilterRBy("ALL")}>
+                        ALL
+                      </Link>
+                    </li>
+                  </ul>
+                </li>
+
+                <li className="list_dropdown dropdown">
+                  <button
+                    className="dropdown-toggle"
+                    data-mdb-toggle="dropdown"
+                  >
+                    Sort by: { sortBy }
                   </button>
                   <ul
                     className="dropdown-menu"
@@ -198,6 +239,16 @@ function PortalClosed() {
                     <li>
                       <Link className="dropdown-item" to="#" onClick={() => setSortBy(HIGHEST_PRICE)}>
                         {HIGHEST_PRICE}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link className="dropdown-item" to="#" onClick={() => setSortBy(LATEST)}>
+                        {LATEST}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link className="dropdown-item" to="#" onClick={() => setSortBy(OLDEST)}>
+                        {OLDEST}
                       </Link>
                     </li>
                   </ul>
@@ -242,7 +293,7 @@ function PortalClosed() {
                                   <div className="col_header">
                                     <div className="d-flex align-items-center justify-content-between">
                                       <h3 className="mb-0">
-                                      GOTCHI HEROES PACK
+                                      {v.name}
                                       </h3>
 
                                       <span>
@@ -261,7 +312,7 @@ function PortalClosed() {
                                   <div className="col_body">
                                     <ul className="list-unstyled">
                                       <li>
-                                        Description: {"Each Gotchi Heroes Pack contains 5 items randomly selected from the Gotchi Heroes item pool. Each pack is guaranteed to contain at least one item that is Rare or better."}
+                                        Description: {v.description}
                                       </li>
                                       <li>
                                         Owner: {" "}
@@ -330,6 +381,12 @@ function PortalClosed() {
                                         Owner: {" "}
                                         <span className="text_purple">
                                           {shapeAddress(v.owner)}
+                                        </span>
+                                      </li>
+                                      <li className="font-weight-bold">
+                                        Time: {" "}
+                                        <span className="text_purple">
+                                          {new Date(v.createdAt*1000).toLocaleString()}
                                         </span>
                                       </li>
                                       {

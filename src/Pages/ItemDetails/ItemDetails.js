@@ -28,68 +28,75 @@ function PortalItems(props) {
   const navigate = useNavigate();
   const [ approvedAmount, setApprovedAmount ] = useState(0);
 
-  useEffect(async () => {
-    if(typeof tokenContract !== "undefined" && tokenContract !== null) {
-      const amount = await tokenContract.methods.allowance(account, marketPlaceAddress).call();
-
-      setApprovedAmount(amount);
-
-      if(Number.parseInt(amount) > item?.price) {
-        setIsApproved(true)
+  useEffect(() => {
+    (async () => {
+      if(typeof tokenContract !== "undefined" && tokenContract !== null) {
+        const amount = await tokenContract.methods.allowance(account, marketPlaceAddress).call();
+  
+        setApprovedAmount(amount);
+  
+        if(Number.parseInt(amount) > item?.price) {
+          setIsApproved(true)
+        }
       }
-    }
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokenContract, item])
 
   
-  useEffect(async () => {
-    if(typeof marketContract !== "undefined" && marketContract !== null) {
-      if(types.length === 0) {
-        const _types = await marketContract.methods.types().call();
-        dispatch(setTypesAction([..._types, packType]));
-        dispatch(setTypeAction(_types[0]));
+  useEffect(() => {
+    (async () => {
+      if(typeof marketContract !== "undefined" && marketContract !== null) {
+        if(types.length === 0) {
+          const _types = await marketContract.methods.types().call();
+          dispatch(setTypesAction([..._types, packType]));
+          dispatch(setTypeAction(_types[0]));
+        }
+        if(typeof params.type !== "undefined" &&  params.type !== null){
+          dispatch(setTypeAction(params.type));
+        }
       }
-      if(typeof params.type !== "undefined" &&  params.type !== null){
-        dispatch(setTypeAction(params.type));
-      }
-    }
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketContract, params]);
 
 
   useEffect(() => {
 
-    loadData();
+    (async () => {
+      if(typeof crntType !== "undefined" && crntType !== null) {
+        if(packType === crntType) {
+          const info = await marketContract.methods.viewItemByCollectionAndTokenId(packAddress, params.id).call();
+          const uri = await packContract.methods.tokenURI(params.id).call();
+          const res = await axios.get(uri);
+          setItem({
+            id: params.id,
+            price: info[1].price,
+            name: res.data.name,
+            description: res.data.description,
+            owner: info[1].seller,
+            image: res.data.image
+          })
+  
+        }else {
+          const info = await marketContract.methods.viewItemByCollectionAndTokenId(gotchiAddress, params.id).call();
+          const uri = await gotchiContract.methods.tokenURI(params.id).call();
+          const res = await axios.get(uri);
+          setItem({
+            ...res.data,
+            image: `${hostingLink}${res.data.spriteIMG}`,
+            id: params.id,
+            price: info[1].price,
+            owner: info[1].seller
+          })
+        }
+      }
+    })()
     
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [crntType])
 
-  async function loadData () {
-    if(typeof crntType !== "undefined" && crntType !== null) {
-      if(packType === crntType) {
-        const info = await marketContract.methods.viewItemByCollectionAndTokenId(packAddress, params.id).call();
-        const uri = await packContract.methods.tokenURI(params.id).call();
-        const res = await axios.get(uri);
-        setItem({
-          id: params.id,
-          price: info[1].price,
-          name: res.data.name,
-          description: res.data.description,
-          owner: info[1].seller,
-          image: res.data.image
-        })
-
-      }else {
-        const info = await marketContract.methods.viewItemByCollectionAndTokenId(gotchiAddress, params.id).call();
-        const uri = await gotchiContract.methods.tokenURI(params.id).call();
-        const res = await axios.get(uri);
-        setItem({
-          ...res.data,
-          image: `${hostingLink}${res.data.spriteIMG}`,
-          id: params.id,
-          price: info[1].price,
-          owner: info[1].seller
-        })
-      }
-    }
-  }
+  
 
   const approveHandler = async () => {
     const balance = await tokenContract.methods.balanceOf(account).call();

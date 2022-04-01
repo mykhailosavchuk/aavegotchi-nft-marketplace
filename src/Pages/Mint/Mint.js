@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useMoralis } from "react-moralis"
-import { useSelector, useDispatch } from "react-redux"
-import { create as ipfsHttpClient } from "ipfs-http-client";
-import { decimals, defaultPackId, gotchiAddress, ipfsLink, packAddress } from "../../config/constances"
+import { useMoralis } from "react-moralis";
+import { useSelector, useDispatch } from "react-redux";
+// import { create as ipfsHttpClient } from "ipfs-http-client";
+import { defaultPackId, ipfsLink, packAddress, starterPackId } from "../../config/constances";
 import axios from "axios";
 import { setLoadingAction, setLoadingLabelAction } from "../../store/actions/GlobalActions";
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 import { toastAction } from "../../store/actions/ToastActions";
 
-const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
+// const client = ipfsHttpClient("https://ipfs.infura.io:5001/api/v0");
 
 function Mint() {
 
@@ -16,7 +16,7 @@ function Mint() {
   const ghstContract  = useSelector(state => state.wallet.ghstContract);
   const gotchiContract  = useSelector(state => state.wallet.gotchiContract);
   const packContract  = useSelector(state => state.wallet.packContract);
-  const { account, isAuthenticated } = useMoralis();
+  const { account, isAuthenticated, Moralis } = useMoralis();
   const [ count, setCount ] = useState(-1);
   const navigate = useNavigate();
 
@@ -25,15 +25,29 @@ function Mint() {
   useEffect(() => {
     initialAction();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ghstContract, account])
+  }, [ghstContract, account]);
 
   const initialAction = async () => {
     if(typeof ghstContract !== "undefined" && ghstContract !== null) {
-      const amount = await ghstContract.methods.allowance(account, gotchiAddress).call();
+      const amount = await ghstContract.methods.allowance(account, packAddress).call();
+      // const newPcak = {
+      //   name: `Gotchi Heroes Pack`,
+      //   description: `Each Gotchi Heroes Pack contains 5 items randomly selected from the Gotchi Heroes item pool. Each pack is guaranteed to contain at least one item that is Rare or better.`,
+      //   gotchiCount: 5,
+      //   price: 5,
+      //   image: `${ipfsLink}QmX2t4j1dG11LtrCfYEAmpE3bL75MvppD4JwEqmdnKgQJa`
+      // }
 
-      const balance = await ghstContract.methods.decimals().call();
-      console.log(balance)
-
+      // const newSPcak = {
+      //   name: `Gotchi Heroes Starter Pack`,
+      //   description: `Each Gotchi Heroes Starter Pack contains 10 items randomly selected from the Gotchi Heroes item pool. Each pack is guaranteed to contain at least one Weapon, one Skill and one Area.`,
+      //   gotchiCount: 10,
+      //   price: 15,
+      //   image: `${ipfsLink}QmbVCNyurXuhpUh8673db8GqKsXs1bQ6apG768c4rYpRzr`
+      // }
+      
+      // await uploadToIpfs(newPcak);
+      // await uploadToIpfs(newSPcak);
       if(Number.parseInt(amount) > 500*Math.pow(10, 18)) {
         setIsApproved(true)
       }
@@ -42,7 +56,7 @@ function Mint() {
 
   const approveHandler = async () => {
     const balance = await ghstContract.methods.balanceOf(account).call();
-    await ghstContract.methods.approve(gotchiAddress, balance).send({from: account});
+    await ghstContract.methods.approve(packAddress, balance).send({from: account});
     setIsApproved(true)
   }
 
@@ -62,7 +76,12 @@ function Mint() {
         
         window.itemCnt = 5;
         if(count === 0) {
-          window.itemCnt = 8;
+          const isStarted = await packContract.methods.isStarted(account).call();
+          if(isStarted) {
+            dispatch(toastAction("error", "You have already starter pack."));
+            return;
+          }
+          window.itemCnt = 10;
         }else if(count > 0) {
           window.itemCnt = count * 5;
         }
@@ -70,7 +89,7 @@ function Mint() {
         const { packId, uris, types } = await getDetails(window.itemCnt);
 
         if(count < 2) {
-          await packContract.methods.mint(defaultPackId, uris, types).send({from: account});
+          await packContract.methods.mint(count === 0 ? starterPackId : defaultPackId, uris, types).send({from: account});
         }else if(count > 1) {
           let packIds = Array(count).fill().map((_) => defaultPackId);
           await packContract.methods.mintBatch(packIds, uris, types).send({from: account});
@@ -104,8 +123,25 @@ function Mint() {
   const uploadToIpfs = async data => {
     let item;
     try {
-      item = await client.add(JSON.stringify(data));
-      await axios.get(`${ipfsLink}${item.path}`)
+      const file = new Moralis.File("file", {base64 : btoa(JSON.stringify(data))});
+      await file.saveIPFS();
+      item = file._hash
+    }catch {
+        await sleep(5000)
+        console.log("error: upload to ipfs")
+        //dispatch(toastAction("error", "IPFS server Error!, please try again"));
+      return null;
+    }
+    return item;
+  }
+
+  const uploadFileToIpfs = async data => {
+    let item;
+    try {
+      const file = new Moralis.File("file", data);
+      await file.saveIPFS();
+      item = file._hash
+      await axios.get(`${ipfsLink}${item}`)
     }catch {
         await sleep(5000)
         console.log("error: upload to ipfs")
@@ -123,7 +159,7 @@ function Mint() {
     console.log("fetch items", itemCnt)
     let url = "";
     if(count === 0){
-      url = `https://gotchiheroes.com/server/generator.php?count=${itemCnt}&starterPack=true`;
+      url = `https://gotchiheroes.com/server/generator.php?count=7&starterPack=true`;
     }else if(count > 0) {
       url = `https://gotchiheroes.com/server/generator.php?count=${itemCnt}`;
     }
@@ -144,6 +180,8 @@ function Mint() {
   }
 
   const getDetails = async (itemCnt) => {
+
+    if(itemCnt <= 0) return null;
     console.log("start get details", itemCnt, window.itemCnt)
     const res = await fetchItems(itemCnt);
 
@@ -151,7 +189,7 @@ function Mint() {
     let gotchiId = await gotchiContract.methods.newId().call();
 
     console.log("getDetails", itemCnt);
-    for(let i=0 ; i<res.data.items.length ; i++){
+    for(let i=res.data.items.length-itemCnt ; i<res.data.items.length ; i++){
       let newGotchi = {
         id: gotchiId ++,
         createdAt: Date.now(),
@@ -174,18 +212,11 @@ function Mint() {
       console.log(window.types_.length)
 
       window.types_.push(newGotchi.type);
-      window.uris_.push(item.path)
-      if(window.itemCnt%window.types_.length === 0) {
-        dispatch(toastAction("success", "A pack is minted!"))
-      }
+      window.uris_.push(item)
+      
     }
 
-    // const newPcak = {
-    //   name: `Gochi game pack`,
-    //   description: `A Pack has 5 items and you can get these by openning it, so you need to pay 5 GHERO to buy this pack.`,
-    //   gotchiCount: res.data.items.length,
-    //   image: `${ipfsLink}QmbWDffqcugn4HzvYwyB1XhVnA3h6AFEGLf3GVRBdowb8E`
-    // }
+    
 
     const packId = await packContract.methods.newId().call();
 
@@ -200,6 +231,8 @@ function Mint() {
   return (
     <div id="MyGotChis">
   
+      <input type="hidden" onChange={e => uploadFileToIpfs(e.target.files[0])} />
+
       <div className="content_body p-3 p-md-5">
         <div className="mt-5">
           <img
@@ -210,59 +243,60 @@ function Mint() {
 
           <h4>Each Gotchi Heroes Pack contains 5 items randomly selected from the Gotchi Heroes item pool. Each pack is guaranteed to contain at least one item that is Rare or better.</h4>
 
-        <div className="d-flex align-items-center" style={{justifyContent: "center"}}>
+        <div className="container">
+          <div className="d-flex row align-items-center" style={{justifyContent: "center"}}>
 
-          <button
-            className="btn_toggle btn text-white m-2"
-            style={{ fontSize: "20px", width: "250px" }}
-            onClick={approveHandler}
-            disabled={isApproved}
-          >
-            Approve Zoe
-          </button>
-
-          <div className="text-white dropdown content_dropdown" style={{width: "150px"}}>
             <button
-              className="dropdown-toggle p-2 px-1 px-sm-3 text-capitalize"
-              data-mdb-toggle="dropdown"
-              style={{width: "150px"}}
+              className="btn_toggle btn text-white m-2"
+              style={{ fontSize: "20px", width: "200px" }}
+              onClick={approveHandler}
+              disabled={isApproved}
             >
-              {selectedCount}
+              Approve GHST
             </button>
-            <div className="dropdown-menu">
-              <ul className="list-unstyled mb-0">
-                <li className="w-100 py-1 text-capitalize" onClick={() => setCount(0)}>
-                  Starter Pack
-                </li>
-                <li className="w-100 py-1" onClick={() => setCount(1)}>
-                  1 pack
-                </li>
-                <li className="w-100 py-1" onClick={() => setCount(10)}>
-                  10 packs
-                </li>
-                <li className="w-100 py-1" onClick={() => setCount(50)}>
-                  50 packs
-                </li>
-                <li className="w-100 py-1" onClick={() => setCount(100)}>
-                  100 packs
-                </li>
-              </ul>
+
+            <div style={{width: "230px"}}>
+              <div className="text-white dropdown content_dropdown" style={{width: "200px"}}>
+                <button
+                  className="btn_toggle btn text-white m-2 text-capitalize m-2"
+                  data-mdb-toggle="dropdown"
+                  style={{fontSize: "20px", width: "200px"}}
+                >
+                  {selectedCount}
+                </button>
+                <div className="dropdown-menu">
+                  <ul className="list-unstyled mb-0">
+                    <li className="w-100 py-1 text-capitalize" onClick={() => setCount(0)}>
+                      Starter Pack
+                    </li>
+                    <li className="w-100 py-1" onClick={() => setCount(1)}>
+                      1 pack
+                    </li>
+                    <li className="w-100 py-1" onClick={() => setCount(10)}>
+                      10 packs
+                    </li>
+                    <li className="w-100 py-1" onClick={() => setCount(50)}>
+                      50 packs
+                    </li>
+                    <li className="w-100 py-1" onClick={() => setCount(100)}>
+                      100 packs
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <button
+              className="btn_toggle btn text-white m-2"
+              style={{ fontSize: "20px", width: "200px" }}
+              onClick={mintPackHandler}
+              disabled={!isApproved}
+            >
+              Mint Pack
+            </button>
             </div>
           </div>
-
-          <button
-            className="btn_toggle btn text-white m-2"
-            style={{ fontSize: "20px", width: "250px" }}
-            onClick={mintPackHandler}
-            disabled={!isApproved}
-          >
-            Mint Pack
-          </button>
-
-        </div>     
-
         </div>
-        
       </div>
     </div>
   );

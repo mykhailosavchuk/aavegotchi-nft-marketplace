@@ -6,7 +6,6 @@ import { Modal } from "rsuite";
 import { useMoralis } from "react-moralis"
 import { decimals, gotchiAddress, hostingLink, secondKeys } from "../../config/constances";
 import { formatPrice } from "../../utils/formatHelpers";
-import tokenLogo from "../../Static/img/logo.png"
 import Loading from "../../Components/Loading";
 
 function MyGotChiItemDetails() {
@@ -20,20 +19,23 @@ function MyGotChiItemDetails() {
   const [ price, setPrice ] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(async () => {
+  useEffect(() => {
+    (async () => {
 
-    if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
-      const uri = await gotchiContract.methods.tokenURI(params.id).call();
-      const info = await marketContract.methods.viewItemByCollectionAndTokenId(gotchiAddress, params.id).call();
-
-      axios.get(uri).then(res => {
-        setGotchi({
-          ...res.data,
-          id: params.id,
-          price: info[1].price
-        });
-      })
-    }
+      if(typeof gotchiContract !== "undefined" && gotchiContract !== null) {
+        const uri = await gotchiContract.methods.tokenURI(params.id).call();
+        const info = await marketContract.methods.viewItemByCollectionAndTokenId(gotchiAddress, params.id).call();
+  
+        axios.get(uri).then(res => {
+          setGotchi({
+            ...res.data,
+            id: params.id,
+            price: info[1].price
+          });
+        })
+      }
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gotchiContract]);
 
  
@@ -108,27 +110,29 @@ function MyGotChiItemDetails() {
                       </li>
                       ))
                     }
-                    
+                    <li className="text-center mt-4">
+                      <button
+                        className={"btn text-white m-2 btn_toggle"}
+                        style={{ fontSize: "20px", width: "200px" }}
+                        onClick={cancelOrderHandler}
+                      >
+                        Cancel Order
+                      </button>
+                      <button
+                        className={"btn text-white m-2 btn_toggle"}
+                        style={{ fontSize: "20px", width: "200px" }}
+                        onClick={() => setChangePriceModal(true)}
+                      >
+                        Change Price
+                      </button>
+                    </li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <button
-          className={"btn text-white m-2 btn_toggle"}
-          style={{ fontSize: "20px", width: "200px" }}
-          onClick={cancelOrderHandler}
-        >
-          Cancel Order
-        </button>
-        <button
-          className={"btn text-white m-2 btn_toggle"}
-          style={{ fontSize: "20px", width: "200px" }}
-          onClick={() => setChangePriceModal(true)}
-        >
-          Change Price
-        </button>
+        
       </div>
 
       <Modal open={changePriceModal} onClose={() => setChangePriceModal(false)}  style={{marginTop: "100px"}}>

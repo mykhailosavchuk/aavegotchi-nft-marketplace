@@ -13,6 +13,7 @@ import MyItems from "./Pages/MyItems/MyItems";
 import MyGotChiItemDetails from "./Pages/MyGotChiItemDetails/MyGotChiItemDetails";
 import MyPackItemDetails from "./Pages/MyPackItemDetails/MyPackItemDetails";
 import MyPackDetails from "./Pages/MyPackDetails/MyPackDetails";
+import { ToastContainer } from "react-toastify"
 import "./App.css";
 
 function App() {
@@ -21,40 +22,42 @@ function App() {
   const loadingLabel = useSelector(state => state.global.loadingLabel);
 
   return (
-      <LoadingOverlay
-        active={isLoading}
-        spinner
-        text={ loadingLabel }
-        styles={{
-          wrapper: {
-            width: '100%',
-            height: '100%',
-            overflow: 'hidden'
-          },
-          
-        }}>
-        <BrowserRouter>
-       
-          <div className="App">
-            <div className="container">
-              <Navigation></Navigation>
-              <Routes>
-                <Route path="/" element={<Marketplace/>}/>
-                <Route path="/item-list/:type" element={<Marketplace/>}/>
-                <Route path="/item-details/:type/:id" element={<ItemDetails/>}/>
-                <Route path="/my-gotchis" element={<MyGotChis/>}/>
-                <Route path="/my-gotchi-details/:id" element={<MyGotChiDetails/>}/>
-                <Route path="/my-gotchi-item-details/:id" element={<MyGotChiItemDetails/>}/>
-                <Route path="/my-pack-item-details/:id" element={<MyPackItemDetails/>}/>
-                <Route path="/my-pack-details/:id" element={<MyPackDetails/>}/>
-                <Route path="/my-packs" element={<MyPacks/>}/>
-                <Route path="/my-items" element={<MyItems/>}/>
-                <Route path="/mint" element={<Mint/>}/>
-              </Routes>
+    <LoadingOverlay
+      active={isLoading}
+      spinner
+      text={ loadingLabel }
+      styles={{
+        wrapper: {
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden'
+        },
+      }}>
+        <ToastContainer/>
+          <BrowserRouter>
+      
+            <div className="App">
+              <div className="container">
+                <Navigation></Navigation>
+                <Routes>
+                  <Route path="/" element={<Marketplace/>}/>
+                  <Route path="/item-list/:type" element={<Marketplace/>}/>
+                  <Route path="/item-details/:type/:id" element={<ItemDetails/>}/>
+                  <Route path="/my-gotchis" element={<MyGotChis/>}/>
+                  <Route path="/my-gotchi-details/:id" element={<MyGotChiDetails/>}/>
+                  <Route path="/my-gotchi-item-details/:id" element={<MyGotChiItemDetails/>}/>
+                  <Route path="/my-pack-item-details/:id" element={<MyPackItemDetails/>}/>
+                  <Route path="/my-pack-details/:id" element={<MyPackDetails/>}/>
+                  <Route path="/my-packs" element={<MyPacks/>}/>
+                  <Route path="/my-items" element={<MyItems/>}/>
+                  <Route path="/mint" element={<Mint/>}/>
+                </Routes>
+              </div>
             </div>
-          </div>
-        </BrowserRouter>
-      </LoadingOverlay>
+          </BrowserRouter>
+        {/* </ToastContainer> */}
+      
+    </LoadingOverlay>
   );
 }
 

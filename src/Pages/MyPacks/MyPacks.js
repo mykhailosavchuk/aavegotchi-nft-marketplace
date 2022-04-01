@@ -16,32 +16,30 @@ function MyPacks(props) {
   const { Paragraph } = Placeholder;
 
   useEffect(() => {
-    loadHandler();
+    (async () => {
+      if(typeof packContract !== "undefined" && packContract !== null) {
+        try {
+          const uris = await packContract.methods.holderTokenUris(account).call();
+          const ids = await packContract.methods.holderTokenIds(account).call();
+          let _packs = [];
+          for(let i=0 ; i<uris.length ; i++) {
+              const res = await axios.get(uris[i]);
+  
+              _packs.push({id: ids[i], ...res.data});
+            
+          }
+  
+          _packs.length === 0 ? setAssetsState(2) : setAssetsState(1);
+          setPacks(_packs);
+        }catch {
+          return setAssetsState(2)
+        }
+      }else {
+        setAssetsState(2)
+      }
+    })()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [packContract, account, chainId]);
-
-  const loadHandler = async () => {
-    if(typeof packContract !== "undefined" && packContract !== null) {
-      try {
-        const uris = await packContract.methods.holderTokenUris(account).call();
-        const ids = await packContract.methods.holderTokenIds(account).call();
-        let _packs = [];
-        for(let i=0 ; i<uris.length ; i++) {
-            const res = await axios.get(uris[i]);
-
-            _packs.push({id: ids[i], ...res.data});
-          
-        }
-
-        _packs.length === 0 ? setAssetsState(2) : setAssetsState(1);
-        setPacks(_packs);
-      }catch {
-        return setAssetsState(2)
-      }
-    }else {
-      setAssetsState(2)
-    }
-  }
 
   const AssetsComponent = () => {
     switch (assetsState) {
@@ -74,7 +72,7 @@ function MyPacks(props) {
                           <div className="col_header">
                             <div className="d-flex align-items-center justify-content-between">
                               <h3 className="mb-0">
-                              GOTCHI HEROES PACK
+                              { v.name }
                               </h3>
 
                               <span>
@@ -86,7 +84,7 @@ function MyPacks(props) {
                                   src={"./logo.png"}
                                   alt=""
                                 />
-                                {5}
+                                {v.price}
                               </span>
                             </div>
                           </div>
@@ -97,7 +95,7 @@ function MyPacks(props) {
                               </li>
                               <li>
                                 <p className="text-left flex">
-                                Each Gotchi Heroes Pack contains 5 items randomly selected from the Gotchi Heroes item pool. Each pack is guaranteed to contain at least one item that is Rare or better.
+                                { v.description }
                                 </p>
                               </li>
                               <li>
@@ -143,7 +141,7 @@ export const EmptyBalance = ({title, link, buttonTitle}) => {
         alt="img"
       />
 
-      <p className="py-3">{title}</p>
+      <h4 className="py-3">{title}</h4>
 
       <Link to={link} className="btn btn_visit">{ buttonTitle }</Link>
     </div>

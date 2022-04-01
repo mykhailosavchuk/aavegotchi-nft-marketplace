@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Button, ButtonToolbar, Modal } from "rsuite";
+import { Drawer, Modal } from "rsuite";
 import { Link } from "react-router-dom";
-import { useMoralis, useTokenPrice, useChain } from "react-moralis"
+import { useMoralis, useChain } from "react-moralis"
 import { shapeAddress } from "../../utils/formatHelpers";
 import Web3 from "web3";
 import { useDispatch } from "react-redux"
@@ -10,7 +10,7 @@ import Market from "../../backend/abis/Marketplace.json";
 import ERC20 from "../../backend/abis/GHERO.json"
 import Gotchi from "../../backend/abis/Gotchi.json";
 import Pack from "../../backend/abis/Pack.json";
-import { tokenAddress, marketPlaceAddress, testTokenAddress, packAddress, gotchiAddress, chain as defaultChainId, testGhstAddress } from "../../config/constances"
+import { marketPlaceAddress, testTokenAddress, packAddress, gotchiAddress, chain as defaultChainId, testGhstAddress } from "../../config/constances"
 import Metamask from "../../Static/img/icon_img/metamask.png";
 import WalletConnect from "../../Static/img/icon_img/walletconnect.png";
 import TrustWallet from "../../Static/img/icon_img/TrustWallet.png";
@@ -103,7 +103,7 @@ const drawer_link_object = {
   ],
 };
 
-function Navigation(props) {
+function Navigation() {
   const [openWithHeader, setOpenWithHeader] = React.useState(false);
   const [thumbToggle, setThumbToggle] = useState(false);
 
@@ -176,14 +176,14 @@ function Navigation(props) {
   }
 
   return (
-    <div id="Navigation" className="modal-container">
+    <div className="modal-container">
 
       <div className="d-flex justify-content-end">
         {
           !isAuthenticated ?
           <Link
             to="#"
-            className="d-flex align-items-center btn_toggle btn p-2 px-3 me-2 my-2 btn text-white"
+            className="d-flex align-items-center btn_toggle btn p-2 px-3 me-2 my-2 text-white"
             style={{ fontSize: "20px" }}
             onClick={() => setWalletConnectModal(true)}
           >
@@ -194,7 +194,7 @@ function Navigation(props) {
             <>
               <Link
                 to="#"
-                className="d-flex align-items-center btn_toggle btn p-2 px-3 me-2 my-2 btn text-white"
+                className="d-flex align-items-center btn_toggle btn p-2 px-3 me-2 my-2 text-white"
                 style={{ fontSize: "20px" }}
                 onClick={() => setLogoutModal(true)}
               >
@@ -204,7 +204,7 @@ function Navigation(props) {
               </Link>
               <Link
                 to="#"
-                className="d-flex align-items-center btn_toggle btn p-2 px-3 me-2 my-2 btn text-white"
+                className="d-flex align-items-center btn_toggle btn p-2 px-3 me-2 my-2 text-white"
                 style={{ fontSize: "20px" }}
                 // onClick={() => switchNetHandler("0x13881")}
                 onClick={() => switchNetHandler(defaultChainId)}
@@ -438,9 +438,9 @@ function Navigation(props) {
                 </div>
                 <div className="col-6">
                 <a
-                  to={`https://polygonscan.com/address/${marketPlaceAddress}`}
+                  href={`https://polygonscan.com/address/${marketPlaceAddress}`}
                   target="_blank"
-                  style={{ fontSize: "20px", float: "right" }}
+                  style={{ fontSize: "20px", float: "right" }} rel="noreferrer"
                 >
                   View On Block Explorer
                 </a>

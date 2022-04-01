@@ -11,7 +11,7 @@
       text-transform: uppercase;
       z-index: 2;
       .aside_title {
-        border: 5px solid black;
+        border: 5px solid white;
         font-size: 20px;
         padding: 0.75rem 0 0.75rem 0;
         background: var(--baazaar-item-bg);
@@ -25,9 +25,9 @@
         display: none;
       }
       li {
-        border-bottom: 5px solid black;
+        border-bottom: 5px solid white;
         &:first-child {
-          border-top: 5px solid black;
+          border-top: 5px solid white;
         }
       }
       .dropdown-menu {
